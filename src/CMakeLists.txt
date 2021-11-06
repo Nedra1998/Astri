@@ -16,13 +16,13 @@ foreach(font ${FONTS})
   list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/include/${name}.hpp")
 endforeach()
 
-add_custom_command(
-  OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/changelog.hpp"
-  COMMAND
-    binary_to_compressed_c -nocompress "${PROJECT_SOURCE_DIR}/CHANGELOG.md"
-    "changelog" > "${CMAKE_CURRENT_BINARY_DIR}/include/changelog.hpp"
-  DEPENDS "${PROJECT_SOURCE_DIR}/CHANGELOG.md")
-list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/include/changelog.hpp")
+# add_custom_command(
+#   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/changelog.hpp"
+#   COMMAND
+#     binary_to_compressed_c -nocompress "${PROJECT_SOURCE_DIR}/CHANGELOG.md"
+#     "changelog" > "${CMAKE_CURRENT_BINARY_DIR}/include/changelog.hpp"
+#   DEPENDS "${PROJECT_SOURCE_DIR}/CHANGELOG.md")
+# list(APPEND SOURCES "${CMAKE_CURRENT_BINARY_DIR}/include/changelog.hpp")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
