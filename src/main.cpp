@@ -10,6 +10,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/stdout_sinks.h>
 
+#include "gui/common.hpp"
 #include "gui/style.hpp"
 #include "logging.hpp"
 #include "version.hpp"
@@ -114,8 +115,8 @@ int main(int argc, char *argv[]) {
   style.add_font("H3", Style::BOLD, 20.0f);
 
   // add_window<ChangelogWindow>();
-  // add_window<ImGuiDemoWindow>();
-  // add_window<ImPlotDemoWindow>();
+  add_window<ImGuiDemoWindow>();
+  add_window<ImPlotDemoWindow>();
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
@@ -126,8 +127,8 @@ int main(int argc, char *argv[]) {
 
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
-    // main_menu();
-    // draw_windows();
+    main_menu();
+    draw_windows();
 
     ImGui::Render();
     int display_w, display_h;
