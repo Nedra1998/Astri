@@ -18,7 +18,7 @@ module.exports = {
   packageFiles: [cmake],
   types: [{
       type: 'build',
-      section: 'Features'
+      hidden: true
     },
     {
       type: 'ci',
@@ -30,19 +30,19 @@ module.exports = {
     },
     {
       type: 'docs',
-      hidden: true
+      section: 'Documentation'
     },
     {
       type: 'feat',
-      hidden: true
+      section: 'Features'
     },
     {
       type: 'fix',
-      section: 'Fix'
+      section: 'Bux Fixes'
     },
     {
       type: 'perf',
-      hidden: true
+      section: 'Features'
     },
     {
       type: 'refactor',
