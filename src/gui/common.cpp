@@ -4,7 +4,7 @@
 #include <imgui.h>
 #include <implot.h>
 
-// #include "changelog.hpp"
+#include "changelog.hpp"
 #include "gui/style.hpp"
 #include "logging.hpp"
 #include "version.hpp"
@@ -15,16 +15,16 @@ std::vector<std::shared_ptr<Window>> windows_;
 
 void astri::gui::MarkdownWindow::render() { Style::get().markdown(text_); }
 
-// astri::gui::ChangelogWindow::ChangelogWindow() : MarkdownWindow("Changelog") {
-//   text_.resize(changelog_size);
-//   for (std::size_t i = 0; i < changelog_size; i += 4) {
-//     const unsigned int blk = changelog_data[i / 4];
-//     text_[i]               = (blk & 0xff);
-//     text_[i + 1]           = ((blk >> 8) & 0xff);
-//     text_[i + 2]           = ((blk >> 16) & 0xff);
-//     text_[i + 3]           = ((blk >> 24) & 0xff);
-//   }
-// }
+astri::gui::ChangelogWindow::ChangelogWindow() : MarkdownWindow("Changelog") {
+  text_.resize(changelog_size);
+  for (std::size_t i = 0; i < changelog_size; i += 4) {
+    const unsigned int blk = changelog_data[i / 4];
+    text_[i]               = (blk & 0xff);
+    text_[i + 1]           = ((blk >> 8) & 0xff);
+    text_[i + 2]           = ((blk >> 16) & 0xff);
+    text_[i + 3]           = ((blk >> 24) & 0xff);
+  }
+}
 
 void astri::gui::ImGuiDemoWindow::draw() {
   if (enabled_) {

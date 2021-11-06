@@ -19,13 +19,13 @@ protected:
   std::string text_;
 };
 
-// class ChangelogWindow : public MarkdownWindow {
-// public:
-//   ChangelogWindow();
+class ChangelogWindow : public MarkdownWindow {
+public:
+  ChangelogWindow();
 
-// private:
-//   std::string changelog_;
-// };
+private:
+  std::string changelog_;
+};
 
 class ImGuiDemoWindow : public Window {
 public:

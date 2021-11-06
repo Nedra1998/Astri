@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
   style.add_font("H2", Style::BOLD, 24.0f);
   style.add_font("H3", Style::BOLD, 20.0f);
 
-  // add_window<ChangelogWindow>();
+  add_window<ChangelogWindow>();
   add_window<ImGuiDemoWindow>();
   add_window<ImPlotDemoWindow>();
 
