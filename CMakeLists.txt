@@ -118,7 +118,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   implot
   GIT_REPOSITORY https://github.com/epezent/implot
-  GIT_TAG v0.12
+  GIT_TAG master
   GIT_SHALLOW TRUE)
 
 FetchContent_GetProperties(spdlog)

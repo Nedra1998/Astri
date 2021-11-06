@@ -12,6 +12,7 @@
 
 #include "gui/common.hpp"
 #include "gui/style.hpp"
+#include "gui/debug.hpp"
 #include "logging.hpp"
 #include "version.hpp"
 
@@ -100,6 +101,10 @@ int main(int argc, char *argv[]) {
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
   ImGui::StyleColorsDark();
+  ImPlot::StyleColorsDark();
+  ImPlotStyle &implot_style = ImPlot::GetStyle();
+  implot_style.AntiAliasedLines = true;
+  implot_style.UseLocalTime = true;
 
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init(glsl_version);
@@ -117,6 +122,8 @@ int main(int argc, char *argv[]) {
   add_window<ChangelogWindow>();
   add_window<ImGuiDemoWindow>();
   add_window<ImPlotDemoWindow>();
+  add_window<astri::debug::FramerateWindow>();
+  add_window<astri::debug::LoggingWindow>();
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
