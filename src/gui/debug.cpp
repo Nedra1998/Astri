@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "logging.hpp"
+#include "spdlog/common.h"
 
 void astri::debug::FramerateWindow::render() {
   ImGui::SliderFloat("Lookback", &lookback, 1.0f, 300.0f, "%.1f s");
@@ -57,9 +58,8 @@ void astri::debug::FramerateWindow::update() {
           data_next[2] * 1000.0,
           1000.0 * static_cast<double>(data_samplecount) /
               static_cast<double>(duration.count())};
-      if (data.size() < data.capacity() - 1) {
+      if (data.size() < data.capacity()) {
         data.push_back(std::move(val));
-        ++data_offset;
       } else {
         data[data_offset] = std::move(val);
         data_offset       = (data_offset + 1) % data.capacity();
@@ -79,4 +79,31 @@ void astri::debug::FramerateWindow::update() {
   ++data_samplecount;
 }
 
-void astri::debug::LoggingWindow::render() {}
+void astri::debug::LoggingWindow::render() {
+  if (ImGui::BeginTable("logtable", 5,
+                        ImGuiTableFlags_RowBg |
+                            ImGuiTableFlags_SizingStretchProp)) {
+    ImGui::TableSetupColumn("Timestamp");
+    ImGui::TableSetupColumn("Logger");
+    ImGui::TableSetupColumn("Level");
+    ImGui::TableSetupColumn("Source");
+    ImGui::TableSetupColumn("Message");
+    ImGui::TableHeadersRow();
+
+    for (std::size_t i = 0; i < buffer.size(); ++i) {
+      const auto &it = buffer[(offset + i) % buffer.capacity()];
+      ImGui::TableNextColumn();
+      ImGui::Text(fmt::format("{}", it.time).c_str());
+      ImGui::TableNextColumn();
+      ImGui::Text(
+          std::string(it.logger_name.data(), it.logger_name.size()).c_str());
+      ImGui::TableNextColumn();
+      ImGui::Text(spdlog::level::to_string_view(it.level).data());
+      ImGui::TableNextColumn();
+      ImGui::Text("%s:%d", it.source.filename, it.source.line);
+      ImGui::TableNextColumn();
+      ImGui::Text(std::string(it.payload.data(), it.payload.size()).c_str());
+    }
+    ImGui::EndTable();
+  }
+}
