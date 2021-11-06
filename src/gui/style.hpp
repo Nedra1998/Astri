@@ -1,7 +1,7 @@
 #pragma once
 
 #include <imgui.h>
-// #include <imgui_markdown.h>
+#include <imgui_markdown.h>
 #include <magic_enum.hpp>
 #include <string>
 #include <string_view>
@@ -76,26 +76,26 @@ public:
     }
   }
 
-  // inline const ImGui::MarkdownConfig &md_config() const { return md_config_; }
-  // inline void markdown(const std::string_view text) {
-  //   ImGui::Markdown(text.data(), text.length(), md_config_);
-  // }
+  inline const ImGui::MarkdownConfig &md_config() const { return md_config_; }
+  inline void markdown(const std::string_view text) {
+    ImGui::Markdown(text.data(), text.length(), md_config_);
+  }
 
 protected:
-  // static void md_link_callback(ImGui::MarkdownLinkCallbackData data);
-  // static void md_format_callback(const ImGui::MarkdownFormatInfo &info,
-  //                                bool start);
+  static void md_link_callback(ImGui::MarkdownLinkCallbackData data);
+  static void md_format_callback(const ImGui::MarkdownFormatInfo &info,
+                                 bool start);
 
 private:
   Style() {
     io_                        = &ImGui::GetIO();
-    // md_config_.tooltipCallback = ImGui::defaultMarkdownTooltipCallback;
-    // md_config_.linkCallback    = md_link_callback;
-    // md_config_.formatCallback  = md_format_callback;
+    md_config_.tooltipCallback = ImGui::defaultMarkdownTooltipCallback;
+    md_config_.linkCallback    = md_link_callback;
+    md_config_.formatCallback  = md_format_callback;
   }
 
   ImGuiIO *io_ = nullptr;
-  // ImGui::MarkdownConfig md_config_;
+  ImGui::MarkdownConfig md_config_;
 
   std::unordered_map<std::string_view, ImFont *> fonts_;
 };

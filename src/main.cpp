@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <implot.h>
 #include <iostream>
 #include <spdlog/common.h>
 #include <spdlog/sinks/dist_sink.h>
@@ -9,9 +10,9 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/stdout_sinks.h>
 
+#include "gui/style.hpp"
 #include "logging.hpp"
 #include "version.hpp"
-#include "gui/style.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
 #  include <io.h>
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  // ImPlot::CreateContext();
+  ImPlot::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
 
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -141,6 +142,7 @@ int main(int argc, char *argv[]) {
 
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
+  ImPlot::DestroyContext();
   ImGui::DestroyContext();
 
   glfwDestroyWindow(window);

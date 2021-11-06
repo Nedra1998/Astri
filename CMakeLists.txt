@@ -110,6 +110,16 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/ocornut/imgui
   GIT_TAG docking
   GIT_SHALLOW TRUE)
+FetchContent_Declare(
+  imgui_markdown
+  GIT_REPOSITORY https://github.com/juliettef/imgui_markdown
+  GIT_TAG main
+  GIT_SHALLOW TRUE)
+FetchContent_Declare(
+  implot
+  GIT_REPOSITORY https://github.com/epezent/implot
+  GIT_TAG v0.12
+  GIT_SHALLOW TRUE)
 
 FetchContent_GetProperties(spdlog)
 if(NOT spdlog_POPULATED)
@@ -136,7 +146,7 @@ if(NOT glfw_POPULATED)
   add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-FetchContent_GetProperties(imgui SOURCE_DIR imgui_SOURCE_DIR)
+FetchContent_GetProperties(imgui)
 if(NOT imgui_POPULATED)
   FetchContent_Populate(imgui)
 
@@ -153,6 +163,30 @@ if(NOT imgui_POPULATED)
                                           "${imgui_SOURCE_DIR}/backends")
   target_link_libraries(imgui PUBLIC glfw)
   add_library(imgui::imgui ALIAS imgui)
+endif()
+
+FetchContent_GetProperties(imgui_markdown)
+if(NOT imgui_markdown_POPULATED)
+  FetchContent_Populate(imgui_markdown)
+
+  add_library(imgui_markdown INTERFACE)
+  target_include_directories(imgui_markdown
+                             INTERFACE "${imgui_markdown_SOURCE_DIR}")
+  target_link_libraries(imgui_markdown INTERFACE imgui)
+  add_library(imgui::markdown ALIAS imgui_markdown)
+endif()
+
+FetchContent_GetProperties(implot)
+if(NOT implot_POPULATED)
+  FetchContent_Populate(implot)
+
+  add_library(
+    implot
+    ${implot_SOURCE_DIR}/implot.cpp ${implot_SOURCE_DIR}/implot_items.cpp
+    ${implot_SOURCE_DIR}/implot_demo.cpp)
+  target_include_directories(implot PUBLIC "${implot_SOURCE_DIR}")
+  target_link_libraries(implot PUBLIC imgui)
+  add_library(imgui::implot ALIAS implot)
 endif()
 
 # }}}

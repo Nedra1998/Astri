@@ -77,75 +77,74 @@ void astri::gui::Style::add_font(std::string_view key, const FontStyle &style,
   }
 }
 
-// void astri::gui::Style::md_link_callback(ImGui::MarkdownLinkCallbackData
-// data) {
-//   std::string url(data.link, data.linkLength);
-//   if (!data.isImage) {
-//     LDEBUG("imgui", "Opening url \"{}\" in default browser", url);
-// #if defined(_WIN32)
-//     ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
-// #else
-//     system(("xdg-open " + std::string(url) + "&").c_str());
-// #endif
-//   }
-// }
-// void astri::gui::Style::md_format_callback(
-//     const ImGui::MarkdownFormatInfo &info, bool start) {
-//   switch (info.type) {
-//   case ImGui::MarkdownFormatType::NORMAL_TEXT: {
-//     break;
-//   }
-//   case ImGui::MarkdownFormatType::EMPHASIS: {
-//     if (info.level == 1) {
-//       ImFont *font = Style::get().italic();
-//       if (start && font != nullptr)
-//         ImGui::PushFont(font);
-//       else if (font != nullptr)
-//         ImGui::PopFont();
-//     } else {
-//       ImFont *font = Style::get().bold();
-//       if (start && font != nullptr)
-//         ImGui::PushFont(font);
-//       else if (font != nullptr)
-//         ImGui::PopFont();
-//     }
-//     break;
-//   }
-//   case ImGui::MarkdownFormatType::HEADING: {
-//     ImFont *font = nullptr;
-//     if (info.level > ImGui::MarkdownConfig::NUMHEADINGS) {
-//       font = Style::get().get_font("H1");
-//     } else {
-//       font = Style::get().get_font(fmt::format("H{}", info.level));
-//     }
+void astri::gui::Style::md_link_callback(ImGui::MarkdownLinkCallbackData data) {
+  std::string url(data.link, data.linkLength);
+  if (!data.isImage) {
+    LDEBUG("imgui", "Opening url \"{}\" in default browser", url);
+#if defined(_WIN32)
+    ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+#else
+    system(("xdg-open " + std::string(url) + "&").c_str());
+#endif
+  }
+}
+void astri::gui::Style::md_format_callback(
+    const ImGui::MarkdownFormatInfo &info, bool start) {
+  switch (info.type) {
+  case ImGui::MarkdownFormatType::NORMAL_TEXT: {
+    break;
+  }
+  case ImGui::MarkdownFormatType::EMPHASIS: {
+    if (info.level == 1) {
+      ImFont *font = Style::get().italic();
+      if (start && font != nullptr)
+        ImGui::PushFont(font);
+      else if (font != nullptr)
+        ImGui::PopFont();
+    } else {
+      ImFont *font = Style::get().bold();
+      if (start && font != nullptr)
+        ImGui::PushFont(font);
+      else if (font != nullptr)
+        ImGui::PopFont();
+    }
+    break;
+  }
+  case ImGui::MarkdownFormatType::HEADING: {
+    ImFont *font = nullptr;
+    if (info.level > ImGui::MarkdownConfig::NUMHEADINGS) {
+      font = Style::get().get_font("H1");
+    } else {
+      font = Style::get().get_font(fmt::format("H{}", info.level));
+    }
 
-//     if (start) {
-//       if (font != nullptr)
-//         ImGui::PushFont(font);
-//     } else {
-//       if (info.level <= 2)
-//         ImGui::Separator();
-//       if (font != nullptr)
-//         ImGui::PopFont();
-//     }
-//     break;
-//   }
-//   case ImGui::MarkdownFormatType::UNORDERED_LIST: {
-//     break;
-//   }
-//   case ImGui::MarkdownFormatType::LINK: {
-//     if (start) {
-//       ImGui::PushStyleColor(ImGuiCol_Text,
-//                             ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
-//     } else {
-//       ImGui::PopStyleColor();
-//       if (info.itemHovered) {
-//         ImGui::UnderLine(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
-//       } else {
-//         ImGui::UnderLine(ImGui::GetStyle().Colors[ImGuiCol_Button]);
-//       }
-//     }
-//     break;
-//   }
-//   }
-// }
+    if (start) {
+      if (font != nullptr)
+        ImGui::PushFont(font);
+    } else {
+      if (info.level <= 2)
+        ImGui::Separator();
+      if (font != nullptr)
+        ImGui::PopFont();
+    }
+    break;
+  }
+  case ImGui::MarkdownFormatType::UNORDERED_LIST: {
+    break;
+  }
+  case ImGui::MarkdownFormatType::LINK: {
+    if (start) {
+      ImGui::PushStyleColor(ImGuiCol_Text,
+                            ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
+    } else {
+      ImGui::PopStyleColor();
+      if (info.itemHovered) {
+        ImGui::UnderLine(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
+      } else {
+        ImGui::UnderLine(ImGui::GetStyle().Colors[ImGuiCol_Button]);
+      }
+    }
+    break;
+  }
+  }
+}
