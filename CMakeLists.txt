@@ -96,6 +96,11 @@ FetchContent_Declare(
   GIT_TAG 8.0.1
   GIT_SHALLOW TRUE)
 FetchContent_Declare(
+  magic_enum
+  GIT_REPOSITORY https://github.com/Neargye/magic_enum
+  GIT_TAG v0.7.3
+  GIT_SHALLOW TRUE)
+FetchContent_Declare(
   glfw
   GIT_REPOSITORY https://github.com/glfw/glfw
   GIT_TAG 3.3.5
@@ -116,6 +121,13 @@ FetchContent_GetProperties(fmt)
 if(NOT fmt_POPULATED)
   FetchContent_Populate(fmt)
   add_subdirectory(${fmt_SOURCE_DIR} ${fmt_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
+FetchContent_GetProperties(magic_enum)
+if(NOT magic_enum_POPULATED)
+  FetchContent_Populate(magic_enum)
+  add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR}
+                   EXCLUDE_FROM_ALL)
 endif()
 
 FetchContent_GetProperties(glfw)

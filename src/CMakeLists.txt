@@ -31,8 +31,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION
 target_include_directories(
   ${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
                           "${CMAKE_CURRENT_BINARY_DIR}/include")
-target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog fmt::fmt glfw
-                                              OpenGL::OpenGL imgui::imgui)
+target_link_libraries(
+  ${PROJECT_NAME} PRIVATE spdlog::spdlog fmt::fmt glfw OpenGL::OpenGL
+                          imgui::imgui magic_enum::magic_enum)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DSPDLOG_FMT_EXTERNAL)
 
