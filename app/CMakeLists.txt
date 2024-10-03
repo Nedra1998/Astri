@@ -6,6 +6,18 @@ CPMAddPackage(
   EXCLUDE_FROM_ALL TRUE
   SYSTEM TRUE)
 
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+  find_program(GZIP_EXECUTABLE gzip)
+else()
+  CPMAddPackage(
+    NAME GLFW
+    GITHUB_REPOSITORY glfw/glfw
+    GIT_TAG 3.3.8
+    OPTIONS "GLFW_BUILD_DOCS OFF" "GLFW_BUILD_EXAMPLES OFF" "GLFW_BUILD_TESTS OFF"
+    EXCLUDE_FROM_ALL TRUE
+    SYSTEM TRUE)
+endif()
+
 CPMAddPackage(
   NAME imgui
   GITHUB_REPOSITORY ocornut/imgui
@@ -22,20 +34,6 @@ CPMAddPackage(
   EXCLUDE_FROM_ALL TRUE
   SYSTEM TRUE)
 
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-  find_program(GZIP_EXECUTABLE gzip)
-else()
-
-  CPMAddPackage(
-    NAME GLFW
-    GITHUB_REPOSITORY glfw/glfw
-    GIT_TAG 3.3.8
-    OPTIONS "GLFW_BUILD_DOCS OFF" "GLFW_BUILD_EXAMPLES OFF" "GLFW_BUILD_TESTS OFF"
-    DOWNLOAD_ONLY TRUE
-    EXCLUDE_FROM_ALL TRUE
-    SYSTEM TRUE)
-endif()
-
 # ---- Dependency Targets ----
 add_library(
   imgui EXCLUDE_FROM_ALL
@@ -49,12 +47,16 @@ add_library(
   ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp)
 target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends
                                         ${imgui_SOURCE_DIR}/misc/cpp)
+if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+  message(STATUS "Building for Desktop")
+  target_link_libraries(imgui PRIVATE glfw)
+endif()
 
 add_library(
   implot EXCLUDE_FROM_ALL ${implot_SOURCE_DIR}/implot.cpp ${implot_SOURCE_DIR}/implot_items.cpp
                           ${implot_SOURCE_DIR}/implot_demo.cpp)
 target_include_directories(implot PUBLIC ${implot_SOURCE_DIR})
-target_link_libraries(implot PUBLIC imgui)
+target_link_libraries(implot PRIVATE imgui)
 
 # ---- Sources ----
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")

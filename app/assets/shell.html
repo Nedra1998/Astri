@@ -47,12 +47,12 @@
         }
       };
 
-      // window.addEventListener('resize', js_resizeCanvas, false);
-      // function js_resizeCanvas() {
-      //   document.getElementById('canvas').width = window.innerWidth;
-      //   document.getElementById('canvas').height = window.innerHeight;
-      // }
-      // js_resizeCanvas();
+      window.addEventListener('resize', js_resizeCanvas, false);
+      function js_resizeCanvas() {
+        document.getElementById('canvas').width = window.innerWidth;
+        document.getElementById('canvas').height = window.innerHeight;
+      }
+      js_resizeCanvas();
     </script>
     {{{ SCRIPT }}}
   </body>
