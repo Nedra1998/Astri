@@ -1,5 +1,7 @@
-#include <functional>
 #include <iostream>
+
+#include "gl.hpp"
+#include "ui/style.hpp"
 
 #define GLFW_INCLUDE_NONE
 
@@ -45,10 +47,6 @@ static void MainLoopForEmscripten()     { MainLoopForEmscriptenP(); }
 #  define EMSCRIPTEN_MAINLOOP_END
 #endif
 // clang-format on
-
-void glfw_callback(int error, const char *description) {
-  LOG_ERROR("GLFW Error {}: {}", error, description);
-}
 
 int main(int argc, char const *argv[]) {
 #ifdef __EMSCRIPTEN__
@@ -115,78 +113,10 @@ int main(int argc, char const *argv[]) {
 
   const auto [width, height] = app::ResizeHandler::initial();
 
-  glfwSetErrorCallback(glfw_callback);
-  if (!glfwInit()) {
-    LOG_CRITICAL("Failed to initialize GLFW");
+  GLFWwindow *window = astri::gl::initialize(width, height);
+  if (!window)
     return -1;
-  }
-
-  // Decide GL+GLSL versions
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-  // GL ES 2.0 + GLSL 100
-  const char *glsl_version = "#version 100";
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-  LOG_INFO("OpenGL ES v{} + GLSL {}", "2.0", 100);
-#elif defined(__APPLE__)
-  // GL 3.2 + GLSL 150
-  const char *glsl_version = "#version 150";
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // Required on Mac
-  LOG_INFO("OpenGL v{} + GLSL {}", "3.2", 150);
-#else
-  // GL 3.0 + GLSL 130
-  const char *glsl_version = "#version 130";
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
-  // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
-  LOG_INFO("OpenGL v{} + GLSL {}", "3.0", 130);
-#endif
-
-  GLFWwindow *window = glfwCreateWindow(width, height, "Astri", NULL, NULL);
-  if (!window) {
-    LOG_CRITICAL("Failed to create GLFW window");
-    glfwTerminate();
-    return -1;
-  }
-
-  glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);
-
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImPlot::CreateContext();
-
-  ImGuiIO &io = ImGui::GetIO();
-  io.IniFilename = NULL;
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-  ImPlotStyle &implot_style = ImPlot::GetStyle();
-  implot_style.UseLocalTime = true;
-  implot_style.UseISO8601 = true;
-
-  ImGui::StyleColorsDark();
-  ImPlot::StyleColorsDark();
-
-#ifdef __EMSCRIPTEN__
-  if (!gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress)) {
-#else
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-#endif
-    LOG_CRITICAL("Failed to initialize GLAD");
-    glfwTerminate();
-    return 1;
-  }
-
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-#ifdef __EMSCRIPTEN__
-  ImGui_ImplGlfw_InstallEmscriptenCallbacks(window, "#canvas");
-#endif
-  ImGui_ImplOpenGL3_Init(glsl_version);
+  astri::ui::Style::get().load_fonts(16.0f);
 
   static bool imgui_demo_window = true;
   static bool implot_demo_window = true;
@@ -209,8 +139,8 @@ int main(int argc, char const *argv[]) {
   glGenBuffers(1, &EBO);
 
   unsigned int VAO;
-  glGenVertexArraysOES(1, &VAO);
-  glBindVertexArrayOES(VAO);
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -315,19 +245,12 @@ int main(int argc, char const *argv[]) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
-    glBindVertexArrayOES(VAO);
+    glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-      GLFWwindow *backup_current_context = glfwGetCurrentContext();
-      ImGui::UpdatePlatformWindows();
-      ImGui::RenderPlatformWindowsDefault();
-      glfwMakeContextCurrent(backup_current_context);
-    }
 
     glfwSwapBuffers(window);
   }
@@ -335,13 +258,7 @@ int main(int argc, char const *argv[]) {
   EMSCRIPTEN_MAINLOOP_END;
 #endif
 
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImPlot::DestroyContext();
-  ImGui::DestroyContext();
-
-  glfwDestroyWindow(window);
-  glfwTerminate();
+  astri::gl::terminate(window);
 
   return 0;
 }

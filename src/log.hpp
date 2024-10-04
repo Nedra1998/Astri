@@ -2,6 +2,7 @@
 #define INCLUDE_ASTRI_LOG_HPP_
 
 #include <fmt/ostream.h>
+#include <fmt/std.h>
 #include <spdlog/spdlog.h>
 
 #define LOG_TRACE(...) SPDLOG_TRACE(__VA_ARGS__)

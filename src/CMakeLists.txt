@@ -23,6 +23,18 @@ CPMAddPackage(
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   find_program(GZIP_EXECUTABLE gzip)
+
+  CPMAddPackage(
+    NAME emscripen_browser_clipboard
+    GITHUB_REPOSITORY Armchair-Software/emscripten-browser-clipboard
+    GIT_TAG main
+    DOWNLOAD_ONLY YES)
+
+  CPMAddPackage(
+    NAME emscripen_browser_cursor
+    GITHUB_REPOSITORY Armchair-Software/emscripten-browser-cursor
+    GIT_TAG main
+    DOWNLOAD_ONLY YES)
 else()
   CPMAddPackage(
     NAME GLFW
@@ -67,6 +79,11 @@ if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   target_link_libraries(imgui PRIVATE glfw)
 endif()
 
+if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+  add_executable(binary_to_compressed_c EXCLUDE_FROM_ALL
+                 ${imgui_SOURCE_DIR}/misc/fonts/binary_to_compressed_c.cpp)
+endif()
+
 add_library(
   implot EXCLUDE_FROM_ALL ${implot_SOURCE_DIR}/implot.cpp ${implot_SOURCE_DIR}/implot_items.cpp
                           ${implot_SOURCE_DIR}/implot_demo.cpp)
@@ -74,14 +91,44 @@ target_include_directories(implot PUBLIC ${implot_SOURCE_DIR})
 target_link_libraries(implot PRIVATE imgui)
 
 # ---- Sources ----
+set(assets)
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/version.hpp.in"
                "${CMAKE_CURRENT_BINARY_DIR}/include/version.hpp" @ONLY)
 
+if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka.h
+           ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold.h
+           ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_italic.h
+           ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold_italic.h
+    COMMAND
+      binary_to_compressed_c -base85 ${PROJECT_SOURCE_DIR}/assets/fonts/IosevkaNerdFont-Regular.ttf
+      iosevka > ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka.h
+    COMMAND
+      binary_to_compressed_c -base85 ${PROJECT_SOURCE_DIR}/assets/fonts/IosevkaNerdFont-Bold.ttf
+      iosevka_bold > ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold.h
+    COMMAND
+      binary_to_compressed_c -base85 ${PROJECT_SOURCE_DIR}/assets/fonts/IosevkaNerdFont-Italic.ttf
+      iosevka_italic > ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_italic.h
+    COMMAND
+      binary_to_compressed_c -base85
+      ${PROJECT_SOURCE_DIR}/assets/fonts/IosevkaNerdFont-BoldItalic.ttf iosevka_bold_italic >
+      ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold_italic.h)
+
+  list(
+    APPEND
+    assets
+    ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka.h
+    ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold.h
+    ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_italic.h
+    ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold_italic.h)
+endif()
+
 # ---- Executable ----
-add_executable(${PROJECT_NAME_LOWER} ${headers} ${sources})
+add_executable(${PROJECT_NAME_LOWER} ${headers} ${sources} ${assets})
 add_executable(${PROJECT_NAME_LOWER}::${PROJECT_NAME_LOWER} ALIAS ${PROJECT_NAME_LOWER})
 
 set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
@@ -93,6 +140,9 @@ target_include_directories(${PROJECT_NAME_LOWER} PRIVATE ${CMAKE_CURRENT_SOURCE_
                                                          ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+  target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE emscripen_browser_clipboard
+                                                      emscripen_browser_cursor)
+
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
   target_link_options(
     ${PROJECT_NAME_LOWER}
@@ -107,6 +157,8 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     -sEXPORTED_FUNCTIONS=_main,_malloc,_free
     -sEXPORTED_RUNTIME_METHODS=ccall
     -lidbfs.js
+    --preload-file
+    ${PROJECT_SOURCE_DIR}/assets/fonts@/assets/fonts
     --shell-file
     ${PROJECT_SOURCE_DIR}/assets/shell.html)
 else()
