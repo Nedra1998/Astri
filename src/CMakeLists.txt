@@ -6,6 +6,21 @@ CPMAddPackage(
   EXCLUDE_FROM_ALL TRUE
   SYSTEM TRUE)
 
+CPMAddPackage(
+  NAME fmt
+  GITHUB_REPOSITORY fmtlib/fmt
+  GIT_TAG 11.0.2
+  EXCLUDE_FROM_ALL TRUE
+  SYSTEM TRUE)
+
+CPMAddPackage(
+  NAME spdlog
+  GITHUB_REPOSITORY gabime/spdlog
+  GIT_TAG v1.14.1
+  OPTIONS "SPDLOG_FMT_EXTERNAL ON"
+  EXCLUDE_FROM_ALL TRUE
+  SYSTEM TRUE)
+
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   find_program(GZIP_EXECUTABLE gzip)
 else()
@@ -62,20 +77,25 @@ target_link_libraries(implot PRIVATE imgui)
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-# ---- Executable ----
-add_executable(${PROJECT_NAME_LOWER}-app ${headers} ${sources})
-add_executable(${PROJECT_NAME_LOWER}::app ALIAS ${PROJECT_NAME_LOWER}-app)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/version.hpp.in"
+               "${CMAKE_CURRENT_BINARY_DIR}/include/version.hpp" @ONLY)
 
-set_target_properties(${PROJECT_NAME_LOWER}-app PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
-target_compile_features(${PROJECT_NAME_LOWER}-app PUBLIC cxx_std_17)
-target_link_libraries(${PROJECT_NAME_LOWER}-app PRIVATE ${PROJECT_NAME_LOWER}::${PROJECT_NAME_LOWER}
-                                                        cxxopts::cxxopts imgui implot)
-target_include_directories(${PROJECT_NAME_LOWER}-app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+# ---- Executable ----
+add_executable(${PROJECT_NAME_LOWER} ${headers} ${sources})
+add_executable(${PROJECT_NAME_LOWER}::${PROJECT_NAME_LOWER} ALIAS ${PROJECT_NAME_LOWER})
+
+set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
+target_compile_features(${PROJECT_NAME_LOWER} PUBLIC cxx_std_17)
+target_compile_definitions(${PROJECT_NAME_LOWER} PUBLIC -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
+target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE cxxopts::cxxopts fmt::fmt spdlog::spdlog imgui
+                                                    implot)
+target_include_directories(${PROJECT_NAME_LOWER} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                                                         ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
   target_link_options(
-    ${PROJECT_NAME_LOWER}-app
+    ${PROJECT_NAME_LOWER}
     PRIVATE
     -SWASM=1
     -sUSE_GLFW=3
@@ -88,16 +108,16 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     -sEXPORTED_RUNTIME_METHODS=ccall
     -lidbfs.js
     --shell-file
-    ${CMAKE_CURRENT_SOURCE_DIR}/assets/shell.html)
+    ${PROJECT_SOURCE_DIR}/assets/shell.html)
 else()
-  target_link_libraries(${PROJECT_NAME_LOWER}-app PRIVATE glfw)
+  target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE glfw)
 endif()
 
 # ---- Post Build Commands ----
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten" AND GZIP_EXECUTABLE)
   add_custom_command(
-    TARGET ${PROJECT_NAME_LOWER}-app
+    TARGET ${PROJECT_NAME_LOWER}
     COMMENT "Compressing WebAssembly Binary"
     POST_BUILD
     COMMAND ${GZIP_EXECUTABLE} -9 --force --keep "${CMAKE_CURRENT_BINARY_DIR}/astri.wasm")

@@ -4,8 +4,6 @@
 #define GLFW_INCLUDE_NONE
 
 #include <GLFW/glfw3.h>
-#include <astri/log.hpp>
-#include <astri/version.hpp>
 #include <cxxopts.hpp>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -26,8 +24,10 @@
 #  include <unistd.h>
 #endif
 
-#include "glad/glad.h"
+#include "glad/glad.hpp"
 #include "handlers.hpp"
+#include "log.hpp"
+#include "version.hpp"
 
 #ifdef __EMSCRIPTEN__
 #  include "web/log_sink.hpp"

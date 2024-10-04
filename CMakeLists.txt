@@ -23,9 +23,6 @@ git_describe(PROJECT_VERSION_COMMIT)
 # ---- Options ----
 option(ENABLE_CCACHE "Enable CCache" ON)
 
-option(ASTRI_BUILD_TESTS "Enable building the tests" ON)
-option(ASTRI_BUILD_APP "Enable building the application" ON)
-
 option(ASTRI_ENABLE_PROFILING "Enable profiling" OFF)
 
 # ---- Dependencies ----
@@ -43,16 +40,7 @@ if(ENABLE_CCACHE)
 endif()
 
 # ---- Subdirectories ----
-add_subdirectory(lib)
-
-if(ASTRI_BUILD_APP)
-  add_subdirectory(app)
-endif()
-
-if(ASTRI_BUILD_TESTS)
-  enable_testing()
-  add_subdirectory(tests)
-endif()
+add_subdirectory(src)
 
 # ---- Packaging ----
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
@@ -87,9 +75,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     message(STATUS "Launcher:    ")
   endif()
   message(STATUS "Compiler:    ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID}) v${CMAKE_CXX_COMPILER_VERSION}")
-  message(STATUS "")
-  message(STATUS "ASTRI_BUILD_TESTS: ${ASTRI_BUILD_TESTS}")
-  message(STATUS "ASTRI_BUILD_APP:   ${ASTRI_BUILD_APP}")
   message(STATUS "")
   message(STATUS "ASTRI_ENABLE_PROFILING: ${ASTRI_ENABLE_PROFILING}")
   message(STATUS "")
