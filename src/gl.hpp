@@ -8,11 +8,11 @@
 
 #include "glad/glad.hpp"
 
-#ifdef __EMSCRIPTEN__
-#  define glGenVertexArrays glGenVertexArraysOES;
-#  define glBindVertexArray glBindVertexArrayOES;
-#  define glDeleteVertexArrays glDeleteVertexArraysOES;
-#endif
+// #ifdef __EMSCRIPTEN__
+// #  define glGenVertexArrays glGenVertexArraysOES;
+// #  define glBindVertexArray glBindVertexArrayOES;
+// #  define glDeleteVertexArrays glDeleteVertexArraysOES;
+// #endif
 
 namespace astri::gl {
   GLFWwindow *initialize(std::uint32_t width, std::uint32_t height);

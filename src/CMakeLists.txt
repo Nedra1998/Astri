@@ -79,7 +79,15 @@ if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   target_link_libraries(imgui PRIVATE glfw)
 endif()
 
-if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+  add_library(emscripen_browser_clipboard EXCLUDE_FROM_ALL INTERFACE)
+  target_include_directories(emscripen_browser_clipboard
+                             INTERFACE ${emscripen_browser_clipboard_SOURCE_DIR})
+
+  add_library(emscripen_browser_cursor EXCLUDE_FROM_ALL INTERFACE)
+  target_include_directories(emscripen_browser_cursor
+                             INTERFACE ${emscripen_browser_cursor_SOURCE_DIR})
+else()
   add_executable(binary_to_compressed_c EXCLUDE_FROM_ALL
                  ${imgui_SOURCE_DIR}/misc/fonts/binary_to_compressed_c.cpp)
 endif()
@@ -133,13 +141,13 @@ add_executable(${PROJECT_NAME_LOWER}::${PROJECT_NAME_LOWER} ALIAS ${PROJECT_NAME
 
 set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
 target_compile_features(${PROJECT_NAME_LOWER} PUBLIC cxx_std_17)
-target_compile_definitions(${PROJECT_NAME_LOWER} PUBLIC -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
 target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE cxxopts::cxxopts fmt::fmt spdlog::spdlog imgui
                                                     implot)
 target_include_directories(${PROJECT_NAME_LOWER} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                                          ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+  target_compile_definitions(${PROJECT_NAME_LOWER} PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
   target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE emscripen_browser_clipboard
                                                       emscripen_browser_cursor)
 
@@ -162,6 +170,7 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     --shell-file
     ${PROJECT_SOURCE_DIR}/assets/shell.html)
 else()
+  target_compile_definitions(${PROJECT_NAME_LOWER} PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
   target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE glfw)
 endif()
 

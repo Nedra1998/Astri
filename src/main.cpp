@@ -54,7 +54,9 @@ int main(int argc, char const *argv[]) {
   console_sink->set_pattern("%v");
   console_sink->set_level(spdlog::level::debug);
 
-  spdlog::set_default_logger(std::make_shared<spdlog::logger>("specula", console_sink));
+  auto logger = std::make_shared<spdlog::logger>("specula", console_sink);
+  logger->set_level(spdlog::level::trace);
+  spdlog::set_default_logger(logger);
 #else
   try {
     cxxopts::Options options("astri", "");
@@ -98,7 +100,9 @@ int main(int argc, char const *argv[]) {
     else
       stdout_sink->set_pattern("%H:%M:%S.%e %l %v");
 
-    spdlog::set_default_logger(std::make_shared<spdlog::logger>("specula", stdout_sink));
+    auto logger = std::make_shared<spdlog::logger>("specula", stdout_sink);
+    logger->set_level(spdlog::level::trace);
+    spdlog::set_default_logger(logger);
 
   } catch (const cxxopts::exceptions::specification &e) {
     std::cerr << e.what() << std::endl;
@@ -110,13 +114,18 @@ int main(int argc, char const *argv[]) {
 #endif
 
   LOG_INFO("Astri v{} ({})", ASTRI_VERSION, ASTRI_VERSION_COMMIT);
+  LOG_DEBUG("Initializing GLFW");
+  LOG_TRACE("Initializing ImGui");
 
   const auto [width, height] = app::ResizeHandler::initial();
 
   GLFWwindow *window = astri::gl::initialize(width, height);
   if (!window)
     return -1;
+
   astri::ui::Style::get().load_fonts(16.0f);
+  app::ClipboardHandler::configure();
+  app::CursorHandler cursor_handler;
 
   static bool imgui_demo_window = true;
   static bool implot_demo_window = true;
@@ -237,6 +246,8 @@ int main(int argc, char const *argv[]) {
       ImGui::ShowDemoWindow(&imgui_demo_window);
     if (implot_demo_window)
       ImPlot::ShowDemoWindow(&implot_demo_window);
+
+    cursor_handler.render();
 
     ImGui::Render();
     int display_w, display_h;
