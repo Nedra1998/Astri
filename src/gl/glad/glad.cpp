@@ -19,7 +19,7 @@
         https://glad.dav1d.de/#profile=compatibility&language=c&specification=gl&loader=on&api=gl%3D3.0&api=gles2%3D2.0&extensions=GL_OES_vertex_array_object
 */
 
-#include "glad.hpp"
+#include "gl/glad/glad.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>

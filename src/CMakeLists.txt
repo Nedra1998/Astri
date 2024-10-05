@@ -108,6 +108,19 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/version.hpp.in"
 
 if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/vertex.h
+           ${CMAKE_CURRENT_BINARY_DIR}/include/fragment.h
+    COMMAND binary_to_compressed_c -nocompress ${PROJECT_SOURCE_DIR}/assets/shaders/fragment.glsl
+            fragment > ${CMAKE_CURRENT_BINARY_DIR}/include/fragment.h
+    COMMAND binary_to_compressed_c -nocompress ${PROJECT_SOURCE_DIR}/assets/shaders/vertex.glsl
+            vertex > ${CMAKE_CURRENT_BINARY_DIR}/include/vertex.h
+    DEPENDS ${PROJECT_SOURCE_DIR}/assets/shaders/fragment.glsl
+            ${PROJECT_SOURCE_DIR}/assets/shaders/vertex.glsl)
+
+  list(APPEND assets ${CMAKE_CURRENT_BINARY_DIR}/include/fragment.h
+       ${CMAKE_CURRENT_BINARY_DIR}/include/vertex.h)
+
+  add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka.h
            ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold.h
            ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_italic.h
@@ -164,9 +177,10 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     -sNO_DISABLE_EXCEPTION_CATCHING=1
     -sEXPORTED_FUNCTIONS=_main,_malloc,_free
     -sEXPORTED_RUNTIME_METHODS=ccall
+    -sMIN_WEBGL_VERSION=2
+    -sMAX_WEBGL_VERSION=2
     -lidbfs.js
-    --preload-file
-    ${PROJECT_SOURCE_DIR}/assets/fonts@/assets/fonts
+    --preload-file ${PROJECT_SOURCE_DIR}/assets@/assets
     --shell-file
     ${PROJECT_SOURCE_DIR}/assets/shell.html)
 else()

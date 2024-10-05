@@ -1,11 +1,5 @@
 #include <iostream>
 
-#include "gl.hpp"
-#include "ui/style.hpp"
-
-#define GLFW_INCLUDE_NONE
-
-#include <GLFW/glfw3.h>
 #include <cxxopts.hpp>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -26,14 +20,18 @@
 #  include <unistd.h>
 #endif
 
-#include "glad/glad.hpp"
+#include "gl/gl.hpp"
+#include "gl/shader.hpp"
 #include "handlers.hpp"
 #include "log.hpp"
+#include "ui/style.hpp"
 #include "version.hpp"
 
 #ifdef __EMSCRIPTEN__
 #  include "web/log_sink.hpp"
 #else
+#  include "fragment.h"
+#  include "vertex.h"
 #endif
 
 // clang-format off
@@ -157,67 +155,17 @@ int main(int argc, char const *argv[]) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-  const char *vertexShaderSource = "#version 100\n"
-                                   "#ifdef GL_ES\n"
-                                   "precision mediump float;\n"
-                                   "#endif\n"
-                                   "attribute vec3 aPos;\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                                   "}\0";
-  unsigned int vertexShader;
-  vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-  glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-  glCompileShader(vertexShader);
-
-  int success;
-  char infoLog[512];
-  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-  if (!success) {
-    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-    LOG_ERROR("Vertex shader compilation failed: {}", infoLog);
+#ifdef __EMSCRIPTEN__
+  astri::Shader shader(std::filesystem::path("assets/shaders/vertex.glsl"),
+                       std::filesystem::path("assets/shaders/fragment.glsl"));
+#else
+  astri::Shader shader(std::string(reinterpret_cast<const char *>(vertex_data), vertex_size),
+                       std::string(reinterpret_cast<const char *>(fragment_data), fragment_size));
+#endif
+  if (!shader.valid()) {
+    LOG_ERROR("Shader failed to compile");
+    return -1;
   }
-
-  const char *fragmentShaderSource = "#version 100\n"
-                                     "#ifdef GL_ES\n"
-                                     "precision mediump float;\n"
-                                     "#endif\n"
-                                     "void main()\n"
-                                     "{\n"
-                                     "    gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);\n"
-                                     "}";
-
-  unsigned int fragmentShader;
-  fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-  glCompileShader(fragmentShader);
-  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-
-  if (!success) {
-    glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-    LOG_ERROR("Fragment shader compilation failed: {}", infoLog);
-  }
-
-  unsigned int shaderProgram;
-  shaderProgram = glCreateProgram();
-
-  glAttachShader(shaderProgram, vertexShader);
-  glAttachShader(shaderProgram, fragmentShader);
-  glLinkProgram(shaderProgram);
-
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-  if (!success) {
-    glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-    LOG_ERROR("Shader program linking failed: {}", infoLog);
-  }
-
-  glUseProgram(shaderProgram);
-
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
@@ -255,7 +203,7 @@ int main(int argc, char const *argv[]) {
     glViewport(0, 0, display_w, display_h);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(shaderProgram);
+    shader.use();
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
