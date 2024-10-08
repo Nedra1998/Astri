@@ -21,6 +21,13 @@ CPMAddPackage(
   EXCLUDE_FROM_ALL TRUE
   SYSTEM TRUE)
 
+CPMAddPackage(
+  NAME json
+  GITHUB_REPOSITORY nlohmann/json
+  GIT_TAG v3.11.3
+  EXCLUDE_FROM_ALL TRUE
+  SYSTEM TRUE)
+
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   find_program(GZIP_EXECUTABLE gzip)
 
@@ -99,7 +106,10 @@ target_include_directories(implot PUBLIC ${implot_SOURCE_DIR})
 target_link_libraries(implot PRIVATE imgui)
 
 # ---- Sources ----
-set(assets)
+file(GLOB_RECURSE fonts CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/assets/*.ttf")
+file(GLOB_RECURSE asset_sources CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/assets/*")
+list(REMOVE_ITEM asset_sources ${fonts})
+
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
@@ -107,45 +117,37 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/version.hpp.in"
                "${CMAKE_CURRENT_BINARY_DIR}/include/version.hpp" @ONLY)
 
 if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/vertex.h
-           ${CMAKE_CURRENT_BINARY_DIR}/include/fragment.h
-    COMMAND binary_to_compressed_c -nocompress ${PROJECT_SOURCE_DIR}/assets/shaders/fragment.glsl
-            fragment > ${CMAKE_CURRENT_BINARY_DIR}/include/fragment.h
-    COMMAND binary_to_compressed_c -nocompress ${PROJECT_SOURCE_DIR}/assets/shaders/vertex.glsl
-            vertex > ${CMAKE_CURRENT_BINARY_DIR}/include/vertex.h
-    DEPENDS ${PROJECT_SOURCE_DIR}/assets/shaders/fragment.glsl
-            ${PROJECT_SOURCE_DIR}/assets/shaders/vertex.glsl)
+  foreach(asset ${asset_sources})
+    get_filename_component(asset_name ${asset} NAME)
 
-  list(APPEND assets ${CMAKE_CURRENT_BINARY_DIR}/include/fragment.h
-       ${CMAKE_CURRENT_BINARY_DIR}/include/vertex.h)
+    get_filename_component(asset_namespace ${asset} NAME_WE)
+    string(REGEX REPLACE "-" "_" asset_namespace ${asset_namespace})
+    string(TOLOWER ${asset_namespace} asset_namespace)
 
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka.h
-           ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold.h
-           ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_italic.h
-           ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold_italic.h
-    COMMAND
-      binary_to_compressed_c -base85 ${PROJECT_SOURCE_DIR}/assets/fonts/IosevkaNerdFont-Regular.ttf
-      iosevka > ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka.h
-    COMMAND
-      binary_to_compressed_c -base85 ${PROJECT_SOURCE_DIR}/assets/fonts/IosevkaNerdFont-Bold.ttf
-      iosevka_bold > ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold.h
-    COMMAND
-      binary_to_compressed_c -base85 ${PROJECT_SOURCE_DIR}/assets/fonts/IosevkaNerdFont-Italic.ttf
-      iosevka_italic > ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_italic.h
-    COMMAND
-      binary_to_compressed_c -base85
-      ${PROJECT_SOURCE_DIR}/assets/fonts/IosevkaNerdFont-BoldItalic.ttf iosevka_bold_italic >
-      ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold_italic.h)
+    add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/${asset_namespace}.h
+      COMMENT "Embedding asset ${asset_name}"
+      COMMAND binary_to_compressed_c -nocompress ${asset} ${asset_namespace} >
+              ${CMAKE_CURRENT_BINARY_DIR}/include/${asset_namespace}.h
+      DEPENDS ${asset})
+    list(APPEND assets ${CMAKE_CURRENT_BINARY_DIR}/include/${asset_namespace}.h)
+  endforeach()
 
-  list(
-    APPEND
-    assets
-    ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka.h
-    ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold.h
-    ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_italic.h
-    ${CMAKE_CURRENT_BINARY_DIR}/include/iosevka_bold_italic.h)
+  foreach(font ${fonts})
+    get_filename_component(font_name ${font} NAME)
+
+    get_filename_component(font_namespace ${font} NAME_WE)
+    string(REGEX REPLACE "-" "_" font_namespace ${font_namespace})
+    string(TOLOWER ${font_namespace} font_namespace)
+
+    add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/${font_namespace}.h
+      COMMENT "Compressing font ${font_name}"
+      COMMAND binary_to_compressed_c -base85 ${font} ${font_namespace} >
+              ${CMAKE_CURRENT_BINARY_DIR}/include/${font_namespace}.h
+      DEPENDS ${font})
+    list(APPEND assets ${CMAKE_CURRENT_BINARY_DIR}/include/${font_namespace}.h)
+  endforeach()
 endif()
 
 # ---- Executable ----
@@ -154,8 +156,8 @@ add_executable(${PROJECT_NAME_LOWER}::${PROJECT_NAME_LOWER} ALIAS ${PROJECT_NAME
 
 set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
 target_compile_features(${PROJECT_NAME_LOWER} PUBLIC cxx_std_17)
-target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE cxxopts::cxxopts fmt::fmt spdlog::spdlog imgui
-                                                    implot)
+target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE cxxopts::cxxopts fmt::fmt spdlog::spdlog
+                                                    nlohmann_json::nlohmann_json imgui implot)
 target_include_directories(${PROJECT_NAME_LOWER} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                                          ${CMAKE_CURRENT_BINARY_DIR}/include)
 
@@ -180,7 +182,8 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     -sMIN_WEBGL_VERSION=2
     -sMAX_WEBGL_VERSION=2
     -lidbfs.js
-    --preload-file ${PROJECT_SOURCE_DIR}/assets@/assets
+    --preload-file
+    ${PROJECT_SOURCE_DIR}/assets@/assets
     --shell-file
     ${PROJECT_SOURCE_DIR}/assets/shell.html)
 else()

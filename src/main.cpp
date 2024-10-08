@@ -122,6 +122,8 @@ int main(int argc, char const *argv[]) {
     return -1;
 
   astri::ui::Style::get().load_fonts(16.0f);
+  // astri::ui::Style::get().set_theme(std::string{"catppuccin-frappe"});
+
   app::ClipboardHandler::configure();
   app::CursorHandler cursor_handler;
 

@@ -6,6 +6,7 @@
 #include <implot.h>
 
 #include "log.hpp"
+#include "ui/style.hpp"
 
 void glfw_callback(int error, const char *description) {
   LOG_ERROR("GLFW Error {}: {}", error, description);
