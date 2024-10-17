@@ -1,5 +1,11 @@
 #include <iostream>
 
+#include "gl/object.hpp"
+
+#ifndef __EMSCRIPTEN__
+#  include <csignal>
+#endif
+
 #include <cxxopts.hpp>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -11,6 +17,8 @@
 
 #ifdef __EMSCRIPTEN__
 #  include <emscripten.h>
+#else
+#  include <cpptrace/cpptrace.hpp>
 #endif // __EMSCRIPTEN__
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -46,6 +54,8 @@ static void MainLoopForEmscripten()     { MainLoopForEmscriptenP(); }
 #endif
 // clang-format on
 
+using namespace astri::gl;
+
 int main(int argc, char const *argv[]) {
 #ifdef __EMSCRIPTEN__
   spdlog::sink_ptr console_sink = std::make_shared<app::web::console_sink_mt>();
@@ -56,6 +66,16 @@ int main(int argc, char const *argv[]) {
   logger->set_level(spdlog::level::trace);
   spdlog::set_default_logger(logger);
 #else
+  struct sigaction action = {0};
+  action.sa_flags = 0;
+  action.sa_sigaction = [](int signum, siginfo_t *info, void *context) {
+    cpptrace::generate_trace().print();
+  };
+  if (sigaction(SIGSEGV, &action, nullptr) == -1) {
+    perror("sigaction");
+    return 1;
+  }
+
   try {
     cxxopts::Options options("astri", "");
 
@@ -130,32 +150,34 @@ int main(int argc, char const *argv[]) {
   static bool imgui_demo_window = true;
   static bool implot_demo_window = true;
 
-  float vertices[] = {
-      0.5f,  0.5f,  0.0f, // top right
-      0.5f,  -0.5f, 0.0f, // bottom right
-      -0.5f, -0.5f, 0.0f, // bottom left
-      -0.5f, 0.5f,  0.0f  // top left
+  std::vector<astri::gl::Vertex> vertices = {
+      Vertex(0.5f, 0.5f, 0.0f),   // top right
+      Vertex(0.5f, -0.5f, 0.0f),  // bottom right
+      Vertex(-0.5f, -0.5f, 0.0f), // bottom left
+      Vertex(-0.5f, 0.5f, 0.0f)   // top left
   };
-  unsigned int indices[] = {
+  std::vector<unsigned int> indices = {
       // note that we start from 0!
       0, 1, 3, // first triangle
       1, 2, 3  // second triangle
   };
-  unsigned int VBO;
-  glGenBuffers(1, &VBO);
-
-  unsigned int EBO;
-  glGenBuffers(1, &EBO);
-
-  unsigned int VAO;
-  glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+  // astri::gl::Object obj(vertices, indices);
+  astri::gl::Object obj = astri::gl::Object::icosphere(1);
+  // unsigned int VBO;
+  // glGenBuffers(1, &VBO);
+  //
+  // unsigned int EBO;
+  // glGenBuffers(1, &EBO);
+  //
+  // unsigned int VAO;
+  // glGenVertexArrays(1, &VAO);
+  // glBindVertexArray(VAO);
+  //
+  // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  //
+  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 #ifdef __EMSCRIPTEN__
   astri::Shader shader(std::filesystem::path("assets/shaders/vertex.glsl"),
@@ -168,9 +190,6 @@ int main(int argc, char const *argv[]) {
     LOG_ERROR("Shader failed to compile");
     return -1;
   }
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
 
   glClearColor(0.0, 0, 0, 1);
 #ifdef __EMSCRIPTEN__
@@ -206,10 +225,11 @@ int main(int argc, char const *argv[]) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     shader.use();
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // glBindVertexArray(VAO);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
+    obj.draw();
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

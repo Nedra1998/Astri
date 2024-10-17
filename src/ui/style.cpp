@@ -1,5 +1,8 @@
 #include "ui/style.hpp"
 
+#include <map>
+#include <string_view>
+
 #include <imgui.h>
 #include <implot.h>
 
@@ -189,8 +192,8 @@ void astri::ui::Style::set_theme(const std::string &theme) {
   LOG_ZONE();
   if (theme == "catppuccin-frappe") {
     LOG_DEBUG("Loading theme: catppuccin-frappe");
-    set_theme(std::string(reinterpret_cast<const char *>(catppuccin_frappe_data),
-                          catppuccin_frappe_size));
+    // set_theme(std::string(reinterpret_cast<const char *>(catppuccin_frappe_data),
+    //                       catppuccin_frappe_size));
     return;
   }
 

@@ -28,6 +28,13 @@ CPMAddPackage(
   EXCLUDE_FROM_ALL TRUE
   SYSTEM TRUE)
 
+CPMAddPackage(
+  NAME glm
+  GITHUB_REPOSITORY g-truc/glm
+  GIT_TAG 1.0.1
+  EXCLUDE_FROM_ALL TRUE
+  SYSTEM TRUE)
+
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
   find_program(GZIP_EXECUTABLE gzip)
 
@@ -48,6 +55,13 @@ else()
     GITHUB_REPOSITORY glfw/glfw
     GIT_TAG 3.3.8
     OPTIONS "GLFW_BUILD_DOCS OFF" "GLFW_BUILD_EXAMPLES OFF" "GLFW_BUILD_TESTS OFF"
+    EXCLUDE_FROM_ALL TRUE
+    SYSTEM TRUE)
+
+  CPMAddPackage(
+    NAME cpptrace
+    GITHUB_REPOSITORY jeremy-rifkin/cpptrace
+    GIT_TAG main
     EXCLUDE_FROM_ALL TRUE
     SYSTEM TRUE)
 endif()
@@ -156,8 +170,15 @@ add_executable(${PROJECT_NAME_LOWER}::${PROJECT_NAME_LOWER} ALIAS ${PROJECT_NAME
 
 set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES OUTPUT_NAME ${PROJECT_NAME_LOWER})
 target_compile_features(${PROJECT_NAME_LOWER} PUBLIC cxx_std_17)
-target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE cxxopts::cxxopts fmt::fmt spdlog::spdlog
-                                                    nlohmann_json::nlohmann_json imgui implot)
+target_link_libraries(
+  ${PROJECT_NAME_LOWER}
+  PRIVATE cxxopts::cxxopts
+          fmt::fmt
+          spdlog::spdlog
+          nlohmann_json::nlohmann_json
+          imgui
+          implot
+          glm::glm)
 target_include_directories(${PROJECT_NAME_LOWER} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                                          ${CMAKE_CURRENT_BINARY_DIR}/include)
 
@@ -188,7 +209,7 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     ${PROJECT_SOURCE_DIR}/assets/shell.html)
 else()
   target_compile_definitions(${PROJECT_NAME_LOWER} PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
-  target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE glfw)
+  target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE glfw cpptrace::cpptrace)
 endif()
 
 # ---- Post Build Commands ----
@@ -199,4 +220,11 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten" AND GZIP_EXECUTABLE)
     COMMENT "Compressing WebAssembly Binary"
     POST_BUILD
     COMMAND ${GZIP_EXECUTABLE} -9 --force --keep "${CMAKE_CURRENT_BINARY_DIR}/astri.wasm")
+elseif(WIN32)
+  add_custom_command(
+    TARGET ${PROJECT_NAME_LOWER}
+    COMMENT "Copying cpptrace DLL"
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:cpptrace::cpptrace>
+            $<TARGET_FILE_DIR:astri>)
 endif()
