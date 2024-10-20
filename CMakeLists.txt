@@ -8,7 +8,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 project(
   Astri
   VERSION 0.1.0
-  DESCRIPTION "This is a test"
+  DESCRIPTION "Satellite tracking and visualization"
   LANGUAGES CXX)
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
@@ -78,6 +78,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   message(STATUS "")
   message(STATUS "ASTRI_ENABLE_PROFILING: ${ASTRI_ENABLE_PROFILING}")
   message(STATUS "")
-  message(STATUS "================================================================================")
+  message(STATUS "==================================================================")
   # cmake-format: on
 endif()

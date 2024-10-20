@@ -1,10 +1,9 @@
 #ifndef INCLUDE_UI_STYLE_HPP_
 #define INCLUDE_UI_STYLE_HPP_
 
-#include <filesystem>
+#include <string_view>
 
 #include <imgui.h>
-#include <nlohmann/json.hpp>
 
 namespace astri::ui {
   class Style {
@@ -17,10 +16,7 @@ namespace astri::ui {
     Style(Style const &) = delete;
     void operator=(Style const &) = delete;
 
-    bool load_fonts(float size);
-
-    void set_theme(std::filesystem::path file);
-    void set_theme(const std::string &theme);
+    bool load_fonts(float size = 16.0f);
 
     ImGuiIO *io = nullptr;
     ImFont *bold = nullptr, *italic = nullptr, *bold_italic = nullptr, *regular = nullptr;
@@ -28,10 +24,7 @@ namespace astri::ui {
   private:
     Style() { io = &ImGui::GetIO(); }
 
-    ImFont *add_font(std::string_view name, std::filesystem::path file, float size);
-    ImFont *add_font(std::string_view name, const char *data, float size);
-
-    bool set_style(const nlohmann::json &config);
+    ImFont *load_font(std::string_view name, const char *data, float size);
   };
 } // namespace astri::ui
 
