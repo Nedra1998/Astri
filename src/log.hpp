@@ -27,6 +27,8 @@
 
 #define LOG_ZONE() SPDLOG_TRACE("{}", __PRETTY_FUNCTION__)
 
+#define ASSERT(x) (!(!(x) && (LOG_CRITICAL("Assertion failed: {}", #x), true)))
+
 #ifdef __EMSCRIPTEN__
 namespace astri::web {
   template <typename Mutex> class ConsoleSink : public spdlog::sinks::base_sink<Mutex> {

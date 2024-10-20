@@ -105,20 +105,20 @@ set(assets)
 file(GLOB_RECURSE asset_sources CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/assets/*")
 
 if(NOT EMSCRIPTEN)
-  foreach(asset ${assets})
+  foreach(asset ${asset_sources})
     get_filename_component(asset_name ${asset} NAME)
     get_filename_component(asset_namespace ${asset} NAME_WE)
     string(REGEX REPLACE "-" "_" asset_namespace ${asset_namespace})
-    string(TOLOWER ${asset_namespace} ${asset_namespace})
+    string(TOLOWER ${asset_namespace} asset_namespace)
 
     add_custom_command(
-      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/assets/${asset_name}.h"
+      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/assets/${asset_namespace}.h"
       COMMAND binary_to_compressed_c -base85 "${asset}" "${asset_namespace}" >
               "${CMAKE_CURRENT_BINARY_DIR}/include/${asset_namespace}.h"
       DEPENDS binary_to_compressed_c "${asset}"
       COMMENT "Embedding ${asset_name}")
 
-    list(APPEND assets "${CMAKE_CURRENT_BINARY_DIR}/include/assets/${asset_name}.h")
+    list(APPEND assets "${CMAKE_CURRENT_BINARY_DIR}/include/assets/${asset_namespace}.h")
   endforeach()
 endif()
 

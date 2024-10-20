@@ -1,6 +1,12 @@
 #include "gl/gl.hpp"
 
+#include "gl/shader.hpp"
 #include "log.hpp"
+
+#ifndef __EMSCRIPTEN__
+#  include "fragment.h"
+#  include "vertex.h"
+#endif // !__EMSCRIPTEN__
 
 namespace astri::gl {
   std::string GLSL_VERSION;
@@ -64,6 +70,15 @@ GLFWwindow *astri::gl::initialize(uint32_t width, uint32_t height) {
     return nullptr;
   }
 #endif // __EMSCRIPTEN__
+
+  Shader shader;
+  shader.add_vertex(vertex_compressed_data_base85);
+  shader.add_fragment(fragment_compressed_data_base85);
+  shader.link();
+  // if (!shader.valid()) {
+  //   LOG_CRITICAL("Failed to load shader");
+  //   return nullptr;
+  // }
 
   return window;
 }
