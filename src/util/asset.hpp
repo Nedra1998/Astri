@@ -4,7 +4,6 @@
 #include <string>
 
 namespace astri::util {
-  bool decode85(const char *src, char *dst);
   std::string decode85(const char *data);
 } // namespace astri::util
 

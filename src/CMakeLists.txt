@@ -112,13 +112,13 @@ if(NOT EMSCRIPTEN)
     string(TOLOWER ${asset_namespace} asset_namespace)
 
     add_custom_command(
-      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/assets/${asset_namespace}.h"
+      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/${asset_namespace}.h"
       COMMAND binary_to_compressed_c -base85 "${asset}" "${asset_namespace}" >
               "${CMAKE_CURRENT_BINARY_DIR}/include/${asset_namespace}.h"
       DEPENDS binary_to_compressed_c "${asset}"
       COMMENT "Embedding ${asset_name}")
 
-    list(APPEND assets "${CMAKE_CURRENT_BINARY_DIR}/include/assets/${asset_namespace}.h")
+    list(APPEND assets "${CMAKE_CURRENT_BINARY_DIR}/include/${asset_namespace}.h")
   endforeach()
 endif()
 

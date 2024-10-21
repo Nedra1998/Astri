@@ -76,8 +76,8 @@ void astri::ui::frame(GLFWwindow *window) {
 
   main_menu();
 
-  ImGui::ShowDemoWindow();
-  ImPlot::ShowDemoWindow();
+  // ImGui::ShowDemoWindow();
+  // ImPlot::ShowDemoWindow();
 
 #ifdef __EMSCRIPTEN__
   set_cursor();

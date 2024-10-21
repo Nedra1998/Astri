@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
   LOG_INFO("Astri v{} ({})", ASTRI_VERSION, ASTRI_VERSION_COMMIT);
 
   GLFWwindow *window = astri::gl::initialize(1280, 720);
+  // GLFWwindow *window = astri::gl::initialize(720, 720);
   if (!window) {
     return -1;
   }
@@ -85,6 +86,8 @@ int main(int argc, char *argv[]) {
     astri::gl::terminate(window);
     return -1;
   }
+
+  astri::gl::startup(window);
 
   glClearColor(0.2, 0.2, 0.2, 1.0);
 #ifdef __EMSCRIPTEN__
@@ -100,6 +103,7 @@ int main(int argc, char *argv[]) {
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    astri::gl::frame(window);
     astri::ui::frame(window);
 
     glfwSwapBuffers(window);

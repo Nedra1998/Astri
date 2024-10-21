@@ -13,6 +13,9 @@ namespace astri::gl {
 
   GLFWwindow *initialize(uint32_t width, uint32_t height);
   void terminate(GLFWwindow *window);
+
+  void startup(GLFWwindow *window);
+  void frame(GLFWwindow *window);
 } // namespace astri::gl
 
 #endif // INCLUDE_GL_GL_HPP_
