@@ -81,6 +81,7 @@ GLFWwindow *astri::gl::initialize(uint32_t width, uint32_t height) {
 #endif // __EMSCRIPTEN__
 
   glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
 
   shader = new astri::gl::Shader();
   shader->add_vertex(vertex_compressed_data_base85);
@@ -98,7 +99,7 @@ GLFWwindow *astri::gl::initialize(uint32_t width, uint32_t height) {
   shader->set("sunPos", glm::vec3(10.0f, 0.0f, 2.0f));
   LOG_INFO("Projection matrix: {}", glm::to_string(camera->projection(width, height)));
 
-  obj = new astri::gl::Object(astri::gl::Object::icosphere(3));
+  obj = new astri::gl::Object(astri::gl::Object::icosphere(2));
 
   return window;
 }

@@ -7,7 +7,7 @@
 namespace astri::gl {
   class Camera {
   public:
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 5.0f),
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 15.0f),
            glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
            glm::vec3 look_at = glm::vec3(0.0f, 0.0f, 0.0f), float fov = 45.0f)
         : position(position), up(up), look_at(look_at), fov(fov) {}
