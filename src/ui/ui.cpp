@@ -7,6 +7,7 @@
 
 #include "log.hpp"
 #include "ui/style.hpp"
+#include "ui/window.hpp"
 #include "version.hpp"
 
 #ifdef __EMSCRIPTEN__
@@ -76,6 +77,11 @@ void astri::ui::frame(GLFWwindow *window) {
 
   main_menu();
 
+  WindowManager &wm = ui::WindowManager::get();
+
+  wm.render();
+  wm.prune();
+
   // ImGui::ShowDemoWindow();
   // ImPlot::ShowDemoWindow();
 
@@ -91,6 +97,7 @@ void astri::ui::main_menu() {
   LOG_ZONE();
   const Style &style = Style::get();
   const ImGuiIO &io = ImGui::GetIO();
+  WindowManager &wm = WindowManager::get();
 
   ImGui::BeginMainMenuBar();
 
@@ -107,6 +114,12 @@ void astri::ui::main_menu() {
     ImGui::EndDisabled();
 
     ImGui::Separator();
+
+    if (ImGui::MenuItem("  ImGui Demo", nullptr, wm.has("  ImGui Demo")))
+      wm.toggle<ImGuiDemoWindow>("  ImGui Demo");
+
+    if (ImGui::MenuItem("  ImPlot Demo", nullptr, wm.has("  ImPlot Demo")))
+      wm.toggle<ImPlotDemoWindow>("  ImPlot Demo");
 
     ImGui::PopFont();
     ImGui::EndMenu();
