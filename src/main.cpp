@@ -5,6 +5,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/stdout_sinks.h>
 
+#include "core/model.hpp"
 #include "gl/gl.hpp"
 #include "log.hpp"
 #include "ui/ui.hpp"
@@ -75,6 +76,10 @@ int main(int argc, char *argv[]) {
 #endif // __EMSCRIPTEN__
 
   LOG_INFO("Astri v{} ({})", ASTRI_VERSION, ASTRI_VERSION_COMMIT);
+
+  const auto data = astri::core::load("active");
+
+  return 0;
 
   GLFWwindow *window = astri::gl::initialize(1280, 720);
   // GLFWwindow *window = astri::gl::initialize(720, 720);

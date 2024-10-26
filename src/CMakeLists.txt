@@ -16,6 +16,20 @@ CPMAddPackage(
   SYSTEM TRUE)
 
 CPMAddPackage(
+  NAME entt
+  GITHUB_REPOSITORY skypjack/entt
+  GIT_TAG v3.14.0
+  EXCLUDE_FROM_ALL TRUE
+  SYSTEM TRUE)
+
+CPMAddPackage(
+  NAME cpp-httplib
+  GITHUB_REPOSITORY yhirose/cpp-httplib
+  GIT_TAG v0.18.1
+  EXCLUDE_FROM_ALL TRUE
+  SYSTEM TRUE)
+
+CPMAddPackage(
   NAME glm
   GITHUB_REPOSITORY g-truc/glm
   GIT_TAG 1.0.1
@@ -134,7 +148,7 @@ list(APPEND headers "${CMAKE_CURRENT_BINARY_DIR}/include/version.hpp")
 add_executable(${PROJECT_NAME_LOWER} ${headers} ${sources} ${assets})
 add_executable(${PROJECT_NAME_LOWER}::${PROJECT_NAME_LOWER} ALIAS ${PROJECT_NAME_LOWER})
 
-target_compile_features(${PROJECT_NAME_LOWER} PRIVATE cxx_std_17)
+target_compile_features(${PROJECT_NAME_LOWER} PRIVATE cxx_std_20)
 target_include_directories(${PROJECT_NAME_LOWER} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include"
                                                          "${CURRENT_SOURCE_DIR}")
 
@@ -145,7 +159,15 @@ else()
   target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE glfw)
 endif()
 
-target_link_libraries(${PROJECT_NAME_LOWER} PRIVATE fmt::fmt spdlog::spdlog imgui implot glm::glm)
+target_link_libraries(
+  ${PROJECT_NAME_LOWER}
+  PRIVATE fmt::fmt
+          spdlog::spdlog
+          imgui
+          implot
+          glm::glm
+          EnTT::EnTT
+          httplib::httplib)
 if(EMSCRIPTEN)
   target_compile_definitions(${PROJECT_NAME_LOWER} PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
 else()
