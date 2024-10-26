@@ -1,13 +1,10 @@
 #include "ui/style.hpp"
 
+#include "iosevkanerdfont_bold.h"
+#include "iosevkanerdfont_bolditalic.h"
+#include "iosevkanerdfont_italic.h"
+#include "iosevkanerdfont_regular.h"
 #include "log.hpp"
-
-#ifndef __EMSCRIPTEN__
-#  include "iosevkanerdfont_bold.h"
-#  include "iosevkanerdfont_bolditalic.h"
-#  include "iosevkanerdfont_italic.h"
-#  include "iosevkanerdfont_regular.h"
-#endif // !__EMSCRIPTEN__
 
 static const ImWchar NERD_FONT_GLYPH_RANGES[] = {0x0020, 0x00FF, // Basic Latin + Latin Supplement
                                                  0x23fb, 0x23fe, // IEC Power Symbols
@@ -36,17 +33,10 @@ bool astri::ui::Style::load_fonts(float size) {
   LOG_ZONE();
 
   // clang-format off
-#ifdef __EMSCRIPTEN__
-  regular = load_font("Iosevka",                 R"(/assets/fonts/IosevkaNerdFont-Regular.ttf)",    size);
-  bold = load_font("Iosevka Bold",               R"(/assets/fonts/IosevkaNerdFont-Bold.ttf)",       size);
-  italic = load_font("Iosevka Italic",           R"(/assets/fonts/IosevkaNerdFont-Italic.ttf)",     size);
-  bold_italic = load_font("Iosevka Bold Italic", R"(/assets/fonts/IosevkaNerdFont-BoldItalic.ttf)", size);
-#else
   regular = load_font("Iosevka",                 iosevkanerdfont_regular_compressed_data_base85,    size);
   bold = load_font("Iosevka Bold",               iosevkanerdfont_bold_compressed_data_base85,       size);
   italic = load_font("Iosevka Italic",           iosevkanerdfont_italic_compressed_data_base85,     size);
   bold_italic = load_font("Iosevka Bold Italic", iosevkanerdfont_bolditalic_compressed_data_base85, size);
-#endif // __EMSCRIPTEN__
   // clang-format on
 
   return bold && italic && bold_italic && regular;
@@ -61,12 +51,8 @@ ImFont *astri::ui::Style::load_font(std::string_view name, const char *data, flo
   fmt::format_to_n(config.Name, sizeof(config.Name) / sizeof(config.Name[0]), "{} {:.0f}pt", name,
                    size);
 
-#ifdef __EMSCRIPTEN__
-  ImFont *font = io->Fonts->AddFontFromFileTTF(data, size, &config, NERD_FONT_GLYPH_RANGES);
-#else
   ImFont *font =
       io->Fonts->AddFontFromMemoryCompressedBase85TTF(data, size, &config, NERD_FONT_GLYPH_RANGES);
-#endif // __EMSCRIPTEN__
 
   if (font == nullptr) {
     LOG_ERROR("Failed to load font {} ({:.0f}pt)", name, size);

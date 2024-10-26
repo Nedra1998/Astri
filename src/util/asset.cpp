@@ -151,19 +151,6 @@ static void decode_85(const unsigned char *src, unsigned char *dst) {
 }
 
 std::string astri::util::decode85(const char *src) {
-#ifdef __EMSCRIPTEN__
-  // Read the contents of the data file into a string
-  std::string result;
-  std::ifstream file(data);
-  if (file.is_open()) {
-    result = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-    file.close();
-  } else {
-    LOG_ERROR("Failed to open file: {}", data);
-    return "";
-  }
-  return result;
-#else
   size_t decoded_size = ((std::strlen(src) + 4) / 5) * 4;
   unsigned char *decoded = new unsigned char[decoded_size];
   decode_85(reinterpret_cast<const unsigned char *>(src), decoded);
@@ -178,5 +165,4 @@ std::string astri::util::decode85(const char *src) {
   }
   delete[] decoded;
   return decompressed;
-#endif // __EMSCRIPTEN__
 }

@@ -11,9 +11,6 @@ namespace astri::ui {
 
   void main_menu();
 
-#ifdef __EMSCRIPTEN__
-  void set_cursor();
-#endif // __EMSCRIPTEN__
 } // namespace astri::ui
 
 #endif // INCLUDE_UI_UI_HPP_

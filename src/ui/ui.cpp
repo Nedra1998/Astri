@@ -10,10 +10,6 @@
 #include "ui/window.hpp"
 #include "version.hpp"
 
-#ifdef __EMSCRIPTEN__
-#  include <emscripten_browser_cursor.h>
-#endif
-
 bool astri::ui::initialize(GLFWwindow *window) {
   LOG_ZONE();
 
@@ -29,9 +25,6 @@ bool astri::ui::initialize(GLFWwindow *window) {
   ImGui::StyleColorsDark();
 
   ImGui_ImplGlfw_InitForOpenGL(window, true);
-#ifdef __EMSCRIPTEN__
-  ImGui_ImplGlfw_InstallEmscriptenCallbacks(window, "#canvas");
-#endif
 
   ImGui_ImplOpenGL3_Init(gl::GLSL_VERSION.c_str());
 
@@ -46,11 +39,6 @@ bool astri::ui::initialize(GLFWwindow *window) {
 
   if (!Style::get().load_fonts())
     return false;
-
-#ifdef __EMSCRIPTEN__
-  io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
-  io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
-#endif // __EMSCRIPTEN__
 
   return true;
 }
@@ -84,10 +72,6 @@ void astri::ui::frame(GLFWwindow *window) {
 
   // ImGui::ShowDemoWindow();
   // ImPlot::ShowDemoWindow();
-
-#ifdef __EMSCRIPTEN__
-  set_cursor();
-#endif // __EMSCRIPTEN__
 
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -135,51 +119,3 @@ void astri::ui::main_menu() {
 
   ImGui::EndMainMenuBar();
 }
-
-#ifdef __EMSCRIPTEN__
-
-static emscripten_browser_cursor::cursor last_cursor =
-    emscripten_browser_cursor::cursor::cursor_default;
-
-void astri::ui::set_cursor() {
-  LOG_ZONE();
-  if (ImGui::GetIO().WantCaptureMouse) {
-    emscripten_browser_cursor::cursor new_cursor =
-        emscripten_browser_cursor::cursor::cursor_default;
-    switch (ImGui::GetMouseCursor()) {
-    case ImGuiMouseCursor_Arrow:
-      new_cursor = emscripten_browser_cursor::cursor::cursor_default;
-      break;
-    case ImGuiMouseCursor_TextInput:
-      new_cursor = emscripten_browser_cursor::cursor::text;
-      break;
-    case ImGuiMouseCursor_ResizeAll:
-      new_cursor = emscripten_browser_cursor::cursor::move;
-      break;
-    case ImGuiMouseCursor_ResizeNS:
-      new_cursor = emscripten_browser_cursor::cursor::ns_resize;
-      break;
-    case ImGuiMouseCursor_ResizeEW:
-      new_cursor = emscripten_browser_cursor::cursor::ew_resize;
-      break;
-    case ImGuiMouseCursor_ResizeNESW:
-      new_cursor = emscripten_browser_cursor::cursor::nesw_resize;
-      break;
-    case ImGuiMouseCursor_ResizeNWSE:
-      new_cursor = emscripten_browser_cursor::cursor::nwse_resize;
-      break;
-    case ImGuiMouseCursor_Hand:
-      new_cursor = emscripten_browser_cursor::cursor::pointer;
-      break;
-    case ImGuiMouseCursor_NotAllowed:
-      new_cursor = emscripten_browser_cursor::cursor::not_allowed;
-      break;
-    }
-
-    if (new_cursor != last_cursor) {
-      emscripten_browser_cursor::set(new_cursor);
-      last_cursor = new_cursor;
-    }
-  }
-}
-#endif

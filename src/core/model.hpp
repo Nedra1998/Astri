@@ -7,6 +7,10 @@
 #include <string_view>
 #include <vector>
 
+#include <fmt/chrono.h>
+#include <fmt/format.h>
+#include <nlohmann/json.hpp>
+
 namespace astri::core {
   enum class Classification : std::uint8_t { UNCLASSIFIED = 'U', CLASSIFIED = 'C', SECRET = 'S' };
 
@@ -34,7 +38,53 @@ namespace astri::core {
     std::vector<std::size_t> members;
   };
 
-  std::vector<GeneralPertubations> load(std::string_view group);
+  inline void to_json(nlohmann::json &j, const GeneralPertubations &p) {
+    std::string epoch = fmt::format("{:%Y-%m-%dT%H:%M:%S}", p.epoch);
+
+    j = nlohmann::json{
+        {"OBJECT_NAME", p.object_name},
+        {"OBJECT_ID", p.object_id},
+        {"EPOCH", epoch},
+        {"MEAN_MOTION", p.mean_motion},
+        {"ECCENTRICITY", p.eccentricity},
+        {"INCLINATION", p.inclination},
+        {"RA_OF_ASC_NODE", p.ra_of_asc_node},
+        {"ARG_OF_PERICENTER", p.arg_of_pericenter},
+        {"MEAN_ANOMALY", p.mean_anomaly},
+        {"CLASSIFICATION_TYPE", std::string(static_cast<char>(p.classification_type), 1)},
+        {"NORAD_CAT_ID", p.norad_cat_id},
+        {"ELEMENT_SET_NO", p.element_set_no},
+        {"REV_AT_EPOCH", p.rev_at_epoch},
+        {"BSTAR", p.bstar},
+        {"MEAN_MOTION_DOT", p.mean_motion_dot},
+        {"MEAN_MOTION_DDOT", p.mean_motion_ddot}};
+  }
+
+  inline void from_json(const nlohmann::json &j, GeneralPertubations &p) {
+    std::string epoch;
+    std::string classification_type;
+    j.at("OBJECT_NAME").get_to(p.object_name);
+    j.at("OBJECT_ID").get_to(p.object_id);
+    j.at("EPOCH").get_to(epoch);
+    j.at("MEAN_MOTION").get_to(p.mean_motion);
+    j.at("ECCENTRICITY").get_to(p.eccentricity);
+    j.at("INCLINATION").get_to(p.inclination);
+    j.at("RA_OF_ASC_NODE").get_to(p.ra_of_asc_node);
+    j.at("ARG_OF_PERICENTER").get_to(p.arg_of_pericenter);
+    j.at("MEAN_ANOMALY").get_to(p.mean_anomaly);
+    j.at("CLASSIFICATION_TYPE").get_to(classification_type);
+    j.at("NORAD_CAT_ID").get_to(p.norad_cat_id);
+    j.at("ELEMENT_SET_NO").get_to(p.element_set_no);
+    j.at("REV_AT_EPOCH").get_to(p.rev_at_epoch);
+    j.at("BSTAR").get_to(p.bstar);
+    j.at("MEAN_MOTION_DOT").get_to(p.mean_motion_dot);
+    j.at("MEAN_MOTION_DDOT").get_to(p.mean_motion_ddot);
+
+    std::tm tm{};
+    std::get_time(&tm, epoch.c_str());
+    p.epoch = std::chrono::system_clock::from_time_t(std::mktime(&tm));
+    p.classification_type = static_cast<Classification>(classification_type[0]);
+  }
 } // namespace astri::core
 
 #endif // INCLUDE_CORE_MODEL_HPP_
