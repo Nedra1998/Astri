@@ -53,10 +53,11 @@ int main(int argc, char *argv[]) {
   LOG_INFO("Astri v{} ({})", ASTRI_VERSION, ASTRI_VERSION_COMMIT);
 
   astri::core::Client client("./_cache");
-
-  client.group(client.GROUPS[0]);
-
-  return 0;
+  // astri::core::Datastore &datastore = astri::core::Datastore::get();
+  //
+  // if (const auto satellites = client.group(client.GROUPS[0])) {
+  //   datastore.insert(client.GROUPS[0], satellites.value());
+  // }
 
   GLFWwindow *window = astri::gl::initialize(1280, 720);
   if (!window) {
@@ -83,6 +84,7 @@ int main(int argc, char *argv[]) {
     astri::ui::frame(window);
 
     glfwSwapBuffers(window);
+    MARK_FRAME();
   }
 
   astri::ui::terminate();

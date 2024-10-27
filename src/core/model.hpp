@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -10,6 +11,8 @@
 #include <fmt/chrono.h>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
+
+#include "log.hpp"
 
 namespace astri::core {
   enum class Classification : std::uint8_t { UNCLASSIFIED = 'U', CLASSIFIED = 'C', SECRET = 'S' };
@@ -37,6 +40,54 @@ namespace astri::core {
     std::string name;
     std::vector<std::size_t> members;
   };
+
+  class Datastore {
+  public:
+    static Datastore &get() {
+      static Datastore instance;
+      return instance;
+    }
+
+    inline void insert(std::string_view group,
+                       const std::vector<GeneralPertubations> &group_satellites) {
+      std::vector<std::size_t> members;
+
+      for (auto &satellite : group_satellites) {
+        auto it = std::find_if(satellites.begin(), satellites.end(),
+                               [&satellite](const GeneralPertubations &s) {
+                                 return s.object_id == satellite.object_id;
+                               });
+        if (it == satellites.end()) {
+          members.push_back(satellites.size());
+          satellites.push_back(satellite);
+        } else {
+          members.push_back(std::distance(satellites.begin(), it));
+        }
+      }
+
+      if (std::find_if(groups.begin(), groups.end(),
+                       [group](const Group &g) { return g.name == group; }) == groups.end()) {
+        groups.push_back({std::string(group), members});
+      }
+    }
+
+    std::vector<GeneralPertubations> satellites;
+    std::vector<Group> groups;
+  };
+
+  inline std::chrono::system_clock::time_point parse_epoch(const std::string &epoch) {
+    std::istringstream ss(epoch);
+    std::chrono::system_clock::time_point timepoint;
+    ss >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", timepoint);
+
+    if (ss.peek() == '.') {
+      ss.ignore();
+      uint microseconds;
+      ss >> microseconds;
+      timepoint += std::chrono::microseconds(microseconds);
+    }
+    return timepoint;
+  }
 
   inline void to_json(nlohmann::json &j, const GeneralPertubations &p) {
     std::string epoch = fmt::format("{:%Y-%m-%dT%H:%M:%S}", p.epoch);
@@ -80,9 +131,7 @@ namespace astri::core {
     j.at("MEAN_MOTION_DOT").get_to(p.mean_motion_dot);
     j.at("MEAN_MOTION_DDOT").get_to(p.mean_motion_ddot);
 
-    std::tm tm{};
-    std::get_time(&tm, epoch.c_str());
-    p.epoch = std::chrono::system_clock::from_time_t(std::mktime(&tm));
+    p.epoch = parse_epoch(epoch);
     p.classification_type = static_cast<Classification>(classification_type[0]);
   }
 } // namespace astri::core

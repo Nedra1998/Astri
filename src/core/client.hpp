@@ -17,6 +17,8 @@ namespace astri::core {
     Client(std::filesystem::path cache, std::string_view domain = "https://celestrak.org")
         : cache_(cache), client_(domain.data()) {}
 
+    bool load();
+
     std::optional<std::vector<GeneralPertubations>> group(std::string_view group);
 
   private:

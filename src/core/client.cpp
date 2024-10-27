@@ -3,7 +3,20 @@
 #include <fstream>
 #include <optional>
 
+#include "ecs.hpp"
 #include "log.hpp"
+
+bool astri::core::Client::load() {
+  for (auto group : GROUPS) {
+    if (auto satellites = this->group(group)) {
+      LOG_INFO("Loaded {} satellites from group: {}", satellites->size(), group);
+    } else {
+      LOG_ERROR("Failed to load satellites from group: {}", group);
+      return false;
+    }
+  }
+  return true;
+}
 
 std::optional<std::vector<astri::core::GeneralPertubations>>
 astri::core::Client::group(std::string_view group) {

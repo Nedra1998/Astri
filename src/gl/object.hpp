@@ -21,8 +21,10 @@ namespace astri::gl {
   class Object {
   public:
     Object(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &indices);
-
     Object(const std::vector<glm::vec3> &vertices, const std::vector<unsigned int> &indices);
+
+    void transform(const glm::mat4 &transform) { model_ = transform; }
+    void add_instance(const glm::mat4 &instance, const glm::vec4 &color);
 
     static Object square();
     static Object icosphere(std::uint8_t subdivide = 0);
@@ -32,11 +34,14 @@ namespace astri::gl {
   protected:
     void build();
 
-    unsigned int vbo, ebo, vao, ibo;
+    unsigned int vao, vbo, nbo, ebo, ivbo, cvbo;
     std::vector<Vertex> vertices_;
     std::vector<unsigned int> indices_;
-    std::vector<glm::mat4> instances_ = {glm::mat4(1.0f)};
-    glm::mat4 model = glm::mat4(1.0f);
+
+    glm::mat4 model_ = glm::mat4(1.0f);
+
+    std::vector<glm::mat4> instance_models_ = {};
+    std::vector<glm::vec4> instance_colors_ = {};
   };
 } // namespace astri::gl
 

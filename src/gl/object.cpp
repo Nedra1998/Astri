@@ -14,21 +14,12 @@ using namespace glm;
 
 astri::gl::Object::Object(const std::vector<Vertex> &vertices,
                           const std::vector<unsigned int> &indices)
-    : vertices_(vertices), indices_(indices) {
+    : vao(0), vbo(0), nbo(0), ebo(0), ivbo(0), cvbo(0), vertices_(vertices), indices_(indices) {
   build();
 }
 
 astri::gl::Object::Object(const std::vector<vec3> &vertices,
                           const std::vector<unsigned int> &indices) {
-  instances_ = std::vector<glm::mat4>{};
-  for (int x = -10; x <= 10; x++) {
-    for (int y = -10; y <= 10; y++) {
-      for (int z = -10; z <= 10; z++) {
-        instances_.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(1 * x, 1 * y, 1 * z)));
-      }
-    }
-  }
-
   for (size_t i = 0; i < indices.size(); i += 3) {
     vec3 a = vertices[indices[i]];
     vec3 b = vertices[indices[i + 1]];
@@ -47,61 +38,70 @@ astri::gl::Object::Object(const std::vector<vec3> &vertices,
   build();
 }
 
+void astri::gl::Object::add_instance(const glm::mat4 &instance, const glm::vec4 &color) {
+  LOG_ZONE();
+
+  instance_models_.push_back(instance);
+  instance_colors_.push_back(color);
+
+  glBindVertexArray(vao);
+
+  // clang-format off
+  if (!ivbo)
+    glGenBuffers(1, &ivbo);
+  glBindBuffer(GL_ARRAY_BUFFER, ivbo);
+  glBufferData(GL_ARRAY_BUFFER, instance_models_.size() * sizeof(glm::mat4), instance_models_.data(), GL_STATIC_DRAW);
+
+  for(std::uint8_t i = 0; i < 4; ++i) {
+    glEnableVertexAttribArray(2 + i);
+    glVertexAttribPointer(2 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(i * sizeof(glm::vec4)));
+    glVertexAttribDivisor(2 + i, 1);
+  }
+
+  if(!cvbo)
+    glGenBuffers(1, &cvbo);
+  glBindBuffer(GL_ARRAY_BUFFER, cvbo);
+  glBufferData(GL_ARRAY_BUFFER, instance_colors_.size() * sizeof(glm::vec4), instance_colors_.data(), GL_STATIC_DRAW);
+  glEnableVertexAttribArray(6);
+  glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+  glVertexAttribDivisor(6, 1);
+  // clang-format on
+
+  glBindVertexArray(0);
+}
+
 void astri::gl::Object::build() {
   LOG_ZONE();
 
   glGenVertexArrays(1, &vao);
-  glGenBuffers(1, &vbo);
-  glGenBuffers(1, &ebo);
-  glGenBuffers(1, &ibo);
-
   glBindVertexArray(vao);
 
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), vertices_.data(),
-               GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int), indices_.data(),
-               GL_STATIC_DRAW);
-
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
-
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(3 * sizeof(float)));
-
-  glBindBuffer(GL_ARRAY_BUFFER, ibo);
-  glBufferData(GL_ARRAY_BUFFER, instances_.size() * sizeof(glm::mat4), &model, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ARRAY_BUFFER, ibo);
-  glBufferData(GL_ARRAY_BUFFER, instances_.size() * sizeof(glm::mat4), instances_.data(),
-               GL_STATIC_DRAW);
-
   // clang-format off
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void *)0);
-  glEnableVertexAttribArray(3);
-  glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void *)(sizeof(glm::vec4)));
-  glEnableVertexAttribArray(4);
-  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void *)(2 * sizeof(glm::vec4)));
-  glEnableVertexAttribArray(5);
-  glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void *)(3 * sizeof(glm::vec4)));
-  // clang-format on
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), vertices_.data(), GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+  glEnableVertexAttribArray(0);
 
-  glVertexAttribDivisor(2, 1);
-  glVertexAttribDivisor(3, 1);
-  glVertexAttribDivisor(4, 1);
-  glVertexAttribDivisor(5, 1);
+  glGenBuffers(1, &ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int), indices_.data(), GL_STATIC_DRAW);
+  // clang-format on
 
   glBindVertexArray(0);
 }
 
 void astri::gl::Object::draw(Shader *shader) const {
-  shader->set("model", model);
+  shader->use();
 
   glBindVertexArray(vao);
-  glDrawElementsInstanced(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0, instances_.size());
+  if (instance_models_.empty()) {
+    shader->set("model", model_);
+    glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
+  } else {
+    glDrawElementsInstanced(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0,
+                            instance_models_.size());
+  }
   glBindVertexArray(0);
 }
 
