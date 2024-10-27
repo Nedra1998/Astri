@@ -8,6 +8,7 @@
 #include "log.hpp"
 #include "ui/style.hpp"
 #include "ui/window.hpp"
+#include "ui/windows/list.hpp"
 #include "version.hpp"
 
 bool astri::ui::initialize(GLFWwindow *window) {
@@ -109,6 +110,11 @@ void astri::ui::main_menu() {
     ImGui::EndMenu();
   }
   ImGui::PopFont();
+
+  ImGui::Separator();
+
+  if (ImGui::MenuItem("  List", nullptr, wm.has("  List")))
+    wm.toggle<ListWindow>("  List");
 
   std::string fps = fmt::format("{:.1f} FPS ({:.1f} ms)", io.Framerate, 1000.0f / io.Framerate);
   ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x -

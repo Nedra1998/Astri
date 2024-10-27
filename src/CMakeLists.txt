@@ -16,6 +16,14 @@ CPMAddPackage(
   EXCLUDE_FROM_ALL TRUE
   SYSTEM TRUE)
 
+CPMAddPackage(
+  NAME tracy
+  GITHUB_REPOSITORY wolfpld/tracy
+  GIT_TAG v0.11.1
+  OPTIONS "TRACY_ENABLE ${ASTRI_ENABLE_PROFILING}"
+  EXCLUDE_FROM_ALL TRUE
+  SYSTEM TRUE)
+
 # Astri Core Dependencies
 CPMAddPackage(
   NAME cpp-httplib
@@ -28,6 +36,13 @@ CPMAddPackage(
   NAME json
   GITHUB_REPOSITORY nlohmann/json
   GIT_TAG v3.11.3
+  EXCLUDE_FROM_ALL TRUE
+  SYSTEM TRUE)
+
+CPMAddPackage(
+  NAME flecs
+  GITHUB_REPOSITORY SanderMertens/flecs
+  GIT_TAG v4.0.2
   EXCLUDE_FROM_ALL TRUE
   SYSTEM TRUE)
 
@@ -133,5 +148,7 @@ target_link_libraries(
           glm::glm
           httplib::httplib
           nlohmann_json::nlohmann_json
-          glfw)
+          glfw
+          flecs::flecs_static
+          TracyClient)
 target_compile_definitions(${PROJECT_NAME_LOWER} PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)

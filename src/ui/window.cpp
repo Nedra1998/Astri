@@ -12,11 +12,13 @@ void astri::ui::Window::render() {
 }
 
 void astri::ui::WindowManager::render() {
+  LOG_ZONE();
   for (auto &window : windows)
     window.second->render();
 }
 
 void astri::ui::WindowManager::update() {
+  LOG_ZONE();
   for (auto &window : windows) {
     window.second->update();
   }
@@ -45,12 +47,14 @@ void astri::ui::WindowManager::prune() {
 }
 
 void astri::ui::ImGuiDemoWindow::render() {
+  LOG_ZONE();
   if (!open)
     return;
   ImGui::ShowDemoWindow(&open);
 }
 
 void astri::ui::ImPlotDemoWindow::render() {
+  LOG_ZONE();
   if (!open)
     return;
   ImPlot::ShowDemoWindow(&open);

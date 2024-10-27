@@ -4,6 +4,7 @@
 #include <fmt/ostream.h>
 #include <fmt/std.h>
 #include <spdlog/spdlog.h>
+#include <tracy/Tracy.hpp>
 
 #define LOG_TRACE(...) SPDLOG_TRACE(__VA_ARGS__)
 #define LOG_DEBUG(...) SPDLOG_DEBUG(__VA_ARGS__)
@@ -19,7 +20,10 @@
 #define LOGGER_ERROR(...) SPDLOG_LOGGER_ERROR(__VA_ARGS__)
 #define LOGGER_CRITICAL(...) SPDLOG_LOGGER_CRITICAL(__VA_ARGS__)
 
-#define LOG_ZONE() SPDLOG_TRACE("{}", __PRETTY_FUNCTION__)
+#define MARK_FRAME() FrameMark
+#define LOG_ZONE()                                                                                 \
+  SPDLOG_TRACE("{}", __PRETTY_FUNCTION__);                                                         \
+  ZoneScopedN(__PRETTY_FUNCTION__)
 
 #define ASSERT(x) (!(!(x) && (LOG_CRITICAL("Assertion failed: {}", #x), true)))
 
