@@ -150,5 +150,6 @@ target_link_libraries(
           nlohmann_json::nlohmann_json
           glfw
           flecs::flecs_static
+          ${PROJECT_NAME_LOWER}::glad
           TracyClient)
 target_compile_definitions(${PROJECT_NAME_LOWER} PRIVATE -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)

@@ -5,17 +5,13 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-
-#include "gl/glad/glad.hpp"
+#include <glad/gl.h>
 
 namespace astri::gl {
   extern std::string GLSL_VERSION;
 
   GLFWwindow *initialize(uint32_t width, uint32_t height);
   void terminate(GLFWwindow *window);
-
-  void startup(GLFWwindow *window);
-  void frame(GLFWwindow *window);
 } // namespace astri::gl
 
 #endif // INCLUDE_GL_GL_HPP_

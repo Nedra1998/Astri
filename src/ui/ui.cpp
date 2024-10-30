@@ -1,15 +1,20 @@
 #include "ui/ui.hpp"
 
+#include <memory>
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <implot.h>
 
+#include "ecs.hpp"
 #include "log.hpp"
+#include "ui/menu.hpp"
 #include "ui/style.hpp"
 #include "ui/window.hpp"
 #include "ui/windows/list.hpp"
-#include "version.hpp"
+
+static flecs::system window_update, window_draw;
 
 bool astri::ui::initialize(GLFWwindow *window) {
   LOG_ZONE();
@@ -41,6 +46,21 @@ bool astri::ui::initialize(GLFWwindow *window) {
   if (!Style::get().load_fonts())
     return false;
 
+  window_update =
+      ecs::WORLD.system<WindowPtr>("WindowUpdate").each([](WindowPtr &ptr) { ptr->update(); });
+  window_draw =
+      ecs::WORLD.system<WindowPtr>("WindowRender").each([](WindowPtr &ptr) { ptr->render(); });
+
+  ecs::WORLD.entity("win_list")
+      .set(std::dynamic_pointer_cast<Window>(std::make_shared<ListWindow>()));
+
+  // clang-format off
+  ecs::WORLD.entity("imgui_demo")
+      .set(std::dynamic_pointer_cast<Window>(std::make_shared<ImGuiDemoWindow>("  ImGui Demo")));
+  ecs::WORLD.entity("implot_demo")
+      .set(std::dynamic_pointer_cast<Window>(std::make_shared<ImPlotDemoWindow>("  ImPlot Demo")));
+  // clang-format on
+
   return true;
 }
 
@@ -62,66 +82,20 @@ void astri::ui::frame(GLFWwindow *window) {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
+  {
+    LOG_ZONEN("void astri::ui::window::update()");
+    window_update.run();
+  }
+
   ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
   main_menu();
 
-  WindowManager &wm = ui::WindowManager::get();
-
-  wm.render();
-  wm.prune();
-
-  // ImGui::ShowDemoWindow();
-  // ImPlot::ShowDemoWindow();
+  {
+    LOG_ZONEN("void astri::ui::window::render()");
+    window_draw.run();
+  }
 
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void astri::ui::main_menu() {
-  LOG_ZONE();
-  const Style &style = Style::get();
-  const ImGuiIO &io = ImGui::GetIO();
-  WindowManager &wm = WindowManager::get();
-
-  ImGui::BeginMainMenuBar();
-
-  ImGui::PushFont(style.bold);
-  if (ImGui::BeginMenu("  Astri")) {
-    ImGui::PushFont(style.regular);
-
-    ImGui::BeginDisabled();
-#ifdef NDEBUG
-    ImGui::Text("Astri v%s (%s)", ASTRI_VERSION, ASTRI_VERSION_COMMIT);
-#else
-    ImGui::Text("  Astri v%s (%s) - %s", ASTRI_VERSION, ASTRI_VERSION_COMMIT, ASTRI_BUILD_TYPE);
-#endif // NDEBUG
-    ImGui::EndDisabled();
-
-    ImGui::Separator();
-
-    if (ImGui::MenuItem("  ImGui Demo", nullptr, wm.has("  ImGui Demo")))
-      wm.toggle<ImGuiDemoWindow>("  ImGui Demo");
-
-    if (ImGui::MenuItem("  ImPlot Demo", nullptr, wm.has("  ImPlot Demo")))
-      wm.toggle<ImPlotDemoWindow>("  ImPlot Demo");
-
-    ImGui::PopFont();
-    ImGui::EndMenu();
-  }
-  ImGui::PopFont();
-
-  ImGui::Separator();
-
-  if (ImGui::MenuItem("  List", nullptr, wm.has("  List")))
-    wm.toggle<ListWindow>("  List");
-
-  std::string fps = fmt::format("{:.1f} FPS ({:.1f} ms)", io.Framerate, 1000.0f / io.Framerate);
-  ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x -
-                       ImGui::CalcTextSize(fps.c_str()).x);
-  ImGui::BeginDisabled();
-  ImGui::Text("%s", fps.c_str());
-  ImGui::EndDisabled();
-
-  ImGui::EndMainMenuBar();
 }

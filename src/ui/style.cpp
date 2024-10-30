@@ -1,10 +1,13 @@
 #include "ui/style.hpp"
 
-#include "iosevkanerdfont_bold.h"
-#include "iosevkanerdfont_bolditalic.h"
-#include "iosevkanerdfont_italic.h"
-#include "iosevkanerdfont_regular.h"
 #include "log.hpp"
+
+#ifndef __EMSCRIPTEN__
+#  include "iosevkanerdfont_bold.h"
+#  include "iosevkanerdfont_bolditalic.h"
+#  include "iosevkanerdfont_italic.h"
+#  include "iosevkanerdfont_regular.h"
+#endif // !__EMSCRIPTEN__
 
 static const ImWchar NERD_FONT_GLYPH_RANGES[] = {0x0020, 0x00FF, // Basic Latin + Latin Supplement
                                                  0x23fb, 0x23fe, // IEC Power Symbols

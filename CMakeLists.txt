@@ -9,7 +9,7 @@ project(
   Astri
   VERSION 0.1.0
   DESCRIPTION "Satellite tracking and visualization"
-  LANGUAGES CXX)
+  LANGUAGES CXX C)
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
 
@@ -40,6 +40,7 @@ if(ENABLE_CCACHE)
 endif()
 
 # ---- Subdirectories ----
+add_subdirectory(extern)
 add_subdirectory(src)
 
 # ---- Packaging ----

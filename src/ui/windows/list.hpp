@@ -5,7 +5,7 @@
 namespace astri::ui {
   class ListWindow : public Window {
   public:
-    ListWindow(std::string name) : Window(name) {};
+    ListWindow() : Window("  Satelite List") {}
 
     void draw() override;
   };

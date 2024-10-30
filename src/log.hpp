@@ -3,8 +3,10 @@
 
 #include <fmt/ostream.h>
 #include <fmt/std.h>
+#include <glad/gl.h>
 #include <spdlog/spdlog.h>
 #include <tracy/Tracy.hpp>
+#include <tracy/TracyOpenGL.hpp>
 
 #define LOG_TRACE(...) SPDLOG_TRACE(__VA_ARGS__)
 #define LOG_DEBUG(...) SPDLOG_DEBUG(__VA_ARGS__)
@@ -21,10 +23,20 @@
 #define LOGGER_CRITICAL(...) SPDLOG_LOGGER_CRITICAL(__VA_ARGS__)
 
 #define MARK_FRAME() FrameMark
-#define LOG_ZONE()                                                                                 \
-  SPDLOG_TRACE("{}", __PRETTY_FUNCTION__);                                                         \
-  ZoneScopedN(__PRETTY_FUNCTION__)
+#define LOG_ZONE() ZoneScopedN(__PRETTY_FUNCTION__)
+#define LOG_ZONEN(name) ZoneScopedN(name)
+#define GPU_ZONE(name) TracyGpuZone(name)
+#define APP_INFO(...)                                                                              \
+  do {                                                                                             \
+    const std::string _str = fmt::format(__VA_ARGS__);                                             \
+    TracyAppInfo(_str.c_str(), _str.size());                                                       \
+  } while (0)
 
 #define ASSERT(x) (!(!(x) && (LOG_CRITICAL("Assertion failed: {}", #x), true)))
+
+namespace astri::log {
+  bool initialize();
+  std::shared_ptr<spdlog::logger> get(std::string_view name);
+} // namespace astri::log
 
 #endif // INCLUDE_SRC_LOG_HPP_

@@ -8,9 +8,6 @@ namespace astri::ui {
   void terminate();
 
   void frame(GLFWwindow *window);
-
-  void main_menu();
-
 } // namespace astri::ui
 
 #endif // INCLUDE_UI_UI_HPP_
