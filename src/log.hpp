@@ -23,6 +23,16 @@
 #define LOGGER_CRITICAL(...) SPDLOG_LOGGER_CRITICAL(__VA_ARGS__)
 
 #define MARK_FRAME() FrameMark
+#define CO_ZONE()                                                                                  \
+  TracyFiberEnter(__PRETTY_FUNCTION__);                                                            \
+  ZoneScopedN(__PRETTY_FUNCTION__)
+#define CO_AWAIT(x)                                                                                \
+  TracyFiberLeave;                                                                                 \
+  co_await x;                                                                                      \
+  TracyFiberEnter(__PRETTY_FUNCTION__)
+#define CO_RETURN(x)                                                                               \
+  TracyFiberLeave;                                                                                 \
+  co_return x
 #define LOG_ZONE() ZoneScopedN(__PRETTY_FUNCTION__)
 #define LOG_ZONEN(name) ZoneScopedN(name)
 #define GPU_ZONE(name) TracyGpuZone(name)

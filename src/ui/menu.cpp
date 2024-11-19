@@ -5,6 +5,7 @@
 #include "ecs.hpp"
 #include "gl/gl.hpp"
 #include "log.hpp"
+#include "ui/imgui/progress.hpp"
 #include "ui/style.hpp"
 #include "ui/window.hpp"
 #include "version.hpp"
@@ -58,8 +59,10 @@ void astri::ui::main_menu() {
   ImGui::PopFont();
 
   std::string fps = fmt::format("{:.1f} FPS ({:.1f} ms)", io.Framerate, 1000.0f / io.Framerate);
+
   ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x -
                        ImGui::CalcTextSize(fps.c_str()).x);
+
   ImGui::BeginDisabled();
   ImGui::Text("%s", fps.c_str());
   ImGui::EndDisabled();

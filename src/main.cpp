@@ -1,6 +1,7 @@
 
 #include <iostream>
 
+#include "core/client.hpp"
 #include "ecs.hpp"
 #include "gl/gl.hpp"
 #include "log.hpp"
@@ -48,9 +49,13 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  astri::core::Client client("_cache");
+  client.load();
+
   glClearColor(0.2, 0.2, 0.2, 1.0);
   static double last_time = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
+
     glfwPollEvents();
     GPU_ZONE("Render");
 
