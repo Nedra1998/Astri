@@ -28,6 +28,8 @@ namespace astri {
     double bstar;
     double mean_motion_dot;
     double mean_motion_ddot;
+
+    bool visible = false;
   };
 
   inline std::chrono::system_clock::time_point parse_epoch(const std::string &epoch) {

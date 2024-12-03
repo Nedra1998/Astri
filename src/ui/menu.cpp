@@ -5,7 +5,6 @@
 #include "ecs.hpp"
 #include "gl/gl.hpp"
 #include "log.hpp"
-#include "ui/imgui/progress.hpp"
 #include "ui/style.hpp"
 #include "ui/window.hpp"
 #include "version.hpp"
@@ -37,12 +36,6 @@ void astri::ui::main_menu() {
 
     ImGui::Separator();
 
-    if (win_list != nullptr &&
-        ImGui::MenuItem((*win_list)->name.c_str(), nullptr, (*win_list)->open))
-      (*win_list)->open = !(*win_list)->open;
-
-    ImGui::Separator();
-
     if (win_imgui != nullptr && ImGui::MenuItem("  ImGui Demo", nullptr, (*win_imgui)->open))
       (*win_imgui)->open = !(*win_imgui)->open;
     if (win_implot != nullptr && ImGui::MenuItem("  ImPlot Demo", nullptr, (*win_implot)->open))
@@ -57,6 +50,9 @@ void astri::ui::main_menu() {
     ImGui::EndMenu();
   }
   ImGui::PopFont();
+
+  if (win_list != nullptr && ImGui::MenuItem((*win_list)->name.c_str(), nullptr, (*win_list)->open))
+    (*win_list)->open = !(*win_list)->open;
 
   std::string fps = fmt::format("{:.1f} FPS ({:.1f} ms)", io.Framerate, 1000.0f / io.Framerate);
 
