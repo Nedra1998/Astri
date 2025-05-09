@@ -26,6 +26,13 @@ CPMAddPackage(
 
 # Astri Core Dependencies
 CPMAddPackage(
+  NAME SGP4
+  GIT_TAG main
+  GIT_REPOSITORY ssh://git@vega.local:2222/Arden/SGP4.git
+  EXCLUDE_FROM_ALL TRUE
+  SYSTEM TRUE)
+
+CPMAddPackage(
   NAME cpp-httplib
   GITHUB_REPOSITORY yhirose/cpp-httplib
   GIT_TAG v0.18.1
@@ -142,6 +149,7 @@ target_include_directories(${PROJECT_NAME_LOWER} PRIVATE "${CMAKE_CURRENT_BINARY
 target_link_libraries(
   ${PROJECT_NAME_LOWER}
   PRIVATE fmt::fmt
+          sgp4::sgp4
           spdlog::spdlog
           imgui
           implot

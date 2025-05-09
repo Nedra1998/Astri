@@ -1,9 +1,12 @@
 
+#include <chrono>
 #include <iostream>
 #include <random>
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <sgp4/element_set.hpp>
+#include <sgp4/sgp4.hpp>
 
 #include "core/client.hpp"
 #include "ecs.hpp"
@@ -12,10 +15,13 @@
 #include "gl/gl.hpp"
 #include "gl/object.hpp"
 #include "gl/shader.hpp"
+#include "imgui.h"
 #include "log.hpp"
 #include "ui/ui.hpp"
 #include "version.hpp"
 #include "vertex.h"
+
+#define EARTH 6378.135
 
 #ifdef TRACY_ENABLE
 void *operator new(std ::size_t count) {
@@ -61,7 +67,8 @@ int main(int argc, char *argv[]) {
   astri::core::Client client("_cache");
   client.load();
 
-  astri::gl::Camera camera;
+  // astri::gl::Camera camera(glm::vec3(0.0f, 0.0f, EARTH * 500.0f));
+  astri::gl::Camera camera(glm::vec3(0.0f, EARTH * -5.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
   std::shared_ptr<astri::gl::Shader> shader = std::make_shared<astri::gl::Shader>(
       vertex_compressed_data_base85, fragment_compressed_data_base85);
@@ -70,9 +77,17 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  shader->set("sunPos", glm::vec3(0.0f, 0.0f, 0.0f));
-  shader->set("ambient", glm::vec3(0.05f));
+  int multiplier = 1;
+  double scale = 1.0;
+
+  shader->set("sunPos", glm::vec3(EARTH * 2.0f, -EARTH * 5.0f, 0.0f));
+  shader->set("ambient", glm::vec3(0.1f));
   shader->set("projection", camera.projection(800, 600));
+
+  astri::gl::Object earth = astri::gl::Object::Icosphere(1.0, 5);
+  earth.instance(0, glm::scale(glm::mat4(1.0), glm::vec3(EARTH * 0.95f)),
+                 glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+  earth.shader(shader);
 
   astri::gl::Object object = astri::gl::Object::Icosphere(1.0, 0);
   object.shader(shader);
@@ -83,13 +98,20 @@ int main(int argc, char *argv[]) {
   std::uniform_real_distribution<float> cdis(0.0f, 1.0f);
   std::uniform_real_distribution<float> sdist(-0.01f, 0.01f);
 
+  std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+
   std::size_t i = 0;
-  astri::ecs::WORLD.query<astri::GeneralPertubations>().each(
-      [&](const astri::GeneralPertubations &gp) {
-        object.instance(i++,
-                        glm::translate(glm::mat4(1.0), glm::vec3(dis(gen), dis(gen), dis(gen))),
-                        glm::vec4(cdis(gen), cdis(gen), cdis(gen), 1.0f));
-      });
+  astri::ecs::WORLD.query<sgp4::ElementSet>().each([&](sgp4::ElementSet &gp) {
+    double tsince = std::chrono::duration<double>(now - gp.epoch).count();
+    double r[3], v[3];
+    sgp4::init(sgp4::GravityModel::WGS72, gp);
+    sgp4::sgp4(gp, tsince / 60.0, r, v);
+    object.instance(
+        i++,
+        glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(r[0], r[1], r[2])), glm::vec3(scale)),
+        glm::vec4(cdis(gen), cdis(gen), cdis(gen), 1.0f));
+  });
+  LOG_INFO("Loaded {} elements", i);
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
   static double last_time = glfwGetTime();
@@ -108,21 +130,30 @@ int main(int argc, char *argv[]) {
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
       camera.orbit(0.0f, -0.05f);
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-      camera.orbit(0.0f, 0.0f, -0.1f);
+      camera.orbit(0.0f, 0.0f, -0.01f);
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-      camera.orbit(0.0f, 0.0f, 0.1);
+      camera.orbit(0.0f, 0.0f, 0.01f);
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+      multiplier--;
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+      multiplier++;
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+      scale += 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && scale > 1.0f)
+      scale -= 1.0f;
+
+    // auto nnow = std::chrono::high_resolution_clock::now();
+    ImGuiIO &io = ImGui::GetIO();
+    now += std::chrono::milliseconds(multiplier * static_cast<long>(1000.0f / io.Framerate));
 
     i = 0;
-    astri::ecs::WORLD.query<astri::GeneralPertubations>().each(
-        [&](const astri::GeneralPertubations &gp) {
-          const auto model = object.instance(i);
-          object.instance(i, glm::translate(model, glm::vec3(sdist(gen), sdist(gen), sdist(gen))));
-          ++i;
-          //           glm::vec4(cdis(gen), cdis(gen), cdis(gen), 1.0f));
-          // object.instance(i++,
-          //                 glm::translate(glm::mat4(1.0), glm::vec3(dis(gen), dis(gen),
-          //                 dis(gen))), glm::vec4(cdis(gen), cdis(gen), cdis(gen), 1.0f));
-        });
+    astri::ecs::WORLD.query<sgp4::ElementSet>().each([&](sgp4::ElementSet &gp) {
+      double tsince = std::chrono::duration<double>(now - gp.epoch).count();
+      double r[3], v[3];
+      sgp4::sgp4(gp, tsince / 60.0, r, v);
+      object.instance(i++, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(r[0], r[1], r[2])),
+                                      glm::vec3(scale)));
+    });
 
     // // Move the camera left and right based on the key pressed
     // if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
@@ -139,9 +170,10 @@ int main(int argc, char *argv[]) {
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    shader->set("projection", camera.projection(width, height));
+    shader->set("projection", camera.projection(width, height, 0.1f, EARTH * 100.0f));
     shader->set("view", camera.view());
 
+    earth.draw();
     object.draw();
 
     // double current_time = glfwGetTime();

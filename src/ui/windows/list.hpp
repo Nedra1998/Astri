@@ -3,7 +3,8 @@
 
 #include <vector>
 
-#include "core/model.hpp"
+#include <sgp4/element_set.hpp>
+
 #include "ui/window.hpp"
 namespace astri::ui {
   class ListWindow : public Window {
@@ -13,7 +14,7 @@ namespace astri::ui {
     void draw() override;
 
   private:
-    std::vector<GeneralPertubations> satelites_;
+    std::vector<sgp4::ElementSet> satelites_;
   };
 } // namespace astri::ui
 

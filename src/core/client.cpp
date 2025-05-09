@@ -1,12 +1,15 @@
 #include "core/client.hpp"
 
+#include <sgp4/element_set.hpp>
+#include <sgp4/sgp4.hpp>
+
 #include "ecs.hpp"
 #include "log.hpp"
 
 bool astri::core::Client::load(std::vector<std::string_view> groups) {
   LOG_ZONE();
 
-  std::unordered_map<std::string_view, GeneralPertubations> elements;
+  std::unordered_map<std::string_view, sgp4::ElementSet> elements;
 
   bool success = true;
   for (const auto &group : groups) {
@@ -29,29 +32,27 @@ bool astri::core::Client::load(std::vector<std::string_view> groups) {
   return success;
 }
 
-std::optional<std::vector<astri::GeneralPertubations>>
-astri::core::Client::get(std::string_view group) {
+std::optional<std::vector<sgp4::ElementSet>> astri::core::Client::get(std::string_view group) {
   LOG_ZONE();
 
   const std::string path = fmt::format("/NORAD/elements/gp.php?GROUP={}&FORMAT=JSON", group);
 
   LOG_INFO("GET {}", path);
 
-  return cache_(
+  const auto data = cache_(
       path,
-      [&](const std::string_view &key) -> std::optional<std::vector<GeneralPertubations>> {
+      [&](const std::string_view &key) -> std::optional<std::vector<sgp4::ElementSet>> {
         LOG_ZONE();
         LOG_TRACE("Cache Miss: {}", key);
         if (auto res = client_.Get(key.data())) {
           try {
             nlohmann::json j = nlohmann::json::parse(res->body);
-            std::vector<GeneralPertubations> elements;
+            std::vector<sgp4::ElementSet> elements;
             elements.reserve(j.size());
             for (const auto &element : j) {
               elements.push_back(element);
             }
             return elements;
-            // return j.get<std::vector<GeneralPertubations>>();
           } catch (nlohmann::json::parse_error &err) {
             LOG_ERROR("JSON Parse Error: {}", err.what());
           }
@@ -61,4 +62,10 @@ astri::core::Client::get(std::string_view group) {
         return std::nullopt;
       },
       std::chrono::hours(1));
+
+  if (data.has_value()) {
+    LOG_INFO("{}", data.value()[0]);
+  }
+
+  return data;
 }

@@ -41,6 +41,9 @@ namespace astri::core {
       std::ofstream file(_path / fmt::format("{:016x}.cbor", std::hash<Key>{}(key)),
                          std::ios::binary);
       nlohmann::json jvalue = value;
+      // std::string json_str = jvalue.dump();
+      // file.write(json_str.c_str(), json_str.size());
+      // file.close();
       std::vector<std::uint8_t> bytes = nlohmann::json::to_cbor(jvalue);
       file.write(reinterpret_cast<const char *>(bytes.data()), bytes.size());
       file.close();

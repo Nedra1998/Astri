@@ -7,14 +7,14 @@
 namespace astri::gl {
   class Camera {
   public:
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 50.0f),
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 6000.0f),
            glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
            glm::vec3 look_at = glm::vec3(0.0f, 0.0f, 0.0f), float fov = 45.0f)
         : position(position), up(up), look_at(look_at), fov(fov) {}
 
     inline glm::mat4 view() const { return glm::lookAt(position, look_at, up); }
     inline glm::mat4 projection(size_t width, size_t height, float near = 0.1f,
-                                float far = 1000.0f) const {
+                                float far = 25000.0f) const {
       return glm::perspective(glm::radians(fov), (float)width / (float)height, near, far);
     }
 
@@ -31,7 +31,7 @@ namespace astri::gl {
       up = glm::vec3(rotation * glm::vec4(up, 1.0f));
 
       // Move the camera closer or farther from the look_at point
-      position += glm::normalize(position - look_at) * distance;
+      position += ((position - look_at) * distance);
     }
 
     float fov;
