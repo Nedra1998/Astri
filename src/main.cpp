@@ -17,6 +17,8 @@
 #include "gl/shader.hpp"
 #include "imgui.h"
 #include "log.hpp"
+#include "state.hpp"
+#include "ui/colors.hpp"
 #include "ui/ui.hpp"
 #include "version.hpp"
 #include "vertex.h"
@@ -67,7 +69,6 @@ int main(int argc, char *argv[]) {
   astri::core::Client client("_cache");
   client.load();
 
-  // astri::gl::Camera camera(glm::vec3(0.0f, 0.0f, EARTH * 500.0f));
   astri::gl::Camera camera(glm::vec3(0.0f, EARTH * -5.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
   std::shared_ptr<astri::gl::Shader> shader = std::make_shared<astri::gl::Shader>(
@@ -76,9 +77,6 @@ int main(int argc, char *argv[]) {
     LOG_CRITICAL("Failed to compile required shader");
     return 1;
   }
-
-  int multiplier = 1;
-  double scale = 1.0;
 
   shader->set("sunPos", glm::vec3(EARTH * 2.0f, -EARTH * 5.0f, 0.0f));
   shader->set("ambient", glm::vec3(0.1f));
@@ -94,24 +92,13 @@ int main(int argc, char *argv[]) {
 
   std::random_device rd;
   std::mt19937 gen(rd());
+  std::uniform_real_distribution<float> angle_dist(0.0f, glm::two_pi<float>());
   std::uniform_real_distribution<float> dis(-50.0f, 50.0f);
   std::uniform_real_distribution<float> cdis(0.0f, 1.0f);
   std::uniform_real_distribution<float> sdist(-0.01f, 0.01f);
 
-  std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
-
-  std::size_t i = 0;
-  astri::ecs::WORLD.query<sgp4::ElementSet>().each([&](sgp4::ElementSet &gp) {
-    double tsince = std::chrono::duration<double>(now - gp.epoch).count();
-    double r[3], v[3];
-    sgp4::init(sgp4::GravityModel::WGS72, gp);
-    sgp4::sgp4(gp, tsince / 60.0, r, v);
-    object.instance(
-        i++,
-        glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(r[0], r[1], r[2])), glm::vec3(scale)),
-        glm::vec4(cdis(gen), cdis(gen), cdis(gen), 1.0f));
-  });
-  LOG_INFO("Loaded {} elements", i);
+  astri::SimulationState state = astri::SimulationState::instance();
+  state.setup(object);
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
   static double last_time = glfwGetTime();
@@ -133,37 +120,21 @@ int main(int argc, char *argv[]) {
       camera.orbit(0.0f, 0.0f, -0.01f);
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
       camera.orbit(0.0f, 0.0f, 0.01f);
+
+    // Time speed controls (F/G keys - step multiplier)
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-      multiplier--;
+      state.speed_multiplier--;
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-      multiplier++;
+      state.speed_multiplier++;
+
+    // Satellite size controls (R/T keys - scale)
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-      scale += 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && scale > 1.0f)
-      scale -= 1.0f;
+      state.scale += 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && state.scale > 1.0f)
+      state.scale -= 1.0f;
 
-    // auto nnow = std::chrono::high_resolution_clock::now();
     ImGuiIO &io = ImGui::GetIO();
-    now += std::chrono::milliseconds(multiplier * static_cast<long>(1000.0f / io.Framerate));
-
-    i = 0;
-    astri::ecs::WORLD.query<sgp4::ElementSet>().each([&](sgp4::ElementSet &gp) {
-      double tsince = std::chrono::duration<double>(now - gp.epoch).count();
-      double r[3], v[3];
-      sgp4::sgp4(gp, tsince / 60.0, r, v);
-      object.instance(i++, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(r[0], r[1], r[2])),
-                                      glm::vec3(scale)));
-    });
-
-    // // Move the camera left and right based on the key pressed
-    // if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-    //   camera.position.x -= 0.1f;
-    // if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-    //   camera.position.x += 0.1f;
-    // if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    //   camera.position.y += 0.1f;
-    // if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    //   camera.position.y -= 0.1f;
+    state.update(io.DeltaTime, object);
 
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
@@ -175,10 +146,6 @@ int main(int argc, char *argv[]) {
 
     earth.draw();
     object.draw();
-
-    // double current_time = glfwGetTime();
-    // astri::ecs::WORLD.progress(current_time - last_time);
-    // last_time = current_time;
 
     astri::ui::frame(window);
 

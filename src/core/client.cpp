@@ -54,14 +54,14 @@ std::optional<std::vector<sgp4::ElementSet>> astri::core::Client::get(std::strin
             }
             return elements;
           } catch (nlohmann::json::parse_error &err) {
-            LOG_ERROR("JSON Parse Error: {}", err.what());
+            LOG_ERROR("JSON Parse Error: {}: {}", err.what(), res->body);
           }
         } else {
           LOG_ERROR("HTTP Error: {}", httplib::to_string(res.error()));
         }
         return std::nullopt;
       },
-      std::chrono::hours(1));
+      std::chrono::hours(24));
 
   if (data.has_value()) {
     LOG_INFO("{}", data.value()[0]);

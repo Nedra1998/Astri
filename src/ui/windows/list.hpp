@@ -5,7 +5,9 @@
 
 #include <sgp4/element_set.hpp>
 
+#include "state.hpp"
 #include "ui/window.hpp"
+
 namespace astri::ui {
   class ListWindow : public Window {
   public:
@@ -14,7 +16,8 @@ namespace astri::ui {
     void draw() override;
 
   private:
-    std::vector<sgp4::ElementSet> satelites_;
+    bool cache_dirty_ = true;
+    std::vector<std::tuple<sgp4::ElementSet, SatelliteState>> sorted_satelites_;
   };
 } // namespace astri::ui
 

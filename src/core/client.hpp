@@ -13,10 +13,11 @@ namespace astri::core {
   class Client {
   public:
     // static constexpr std::string_view GROUPS[] = {"stations"};
-    static constexpr std::string_view GROUPS[] = {"active"};
+    static constexpr std::string_view GROUPS[] = {"visual"};
+    // static constexpr std::string_view GROUPS[] = {"active"};
 
     Client(std::filesystem::path cache, std::string_view domain = "https://celestrak.org",
-           std::chrono::duration<float> cache_duration = std::chrono::hours(1))
+           std::chrono::duration<float> cache_duration = std::chrono::hours(24))
         : cache_(cache), client_(domain.data()), cache_duration_(cache_duration) {}
 
     bool load(std::vector<std::string_view> groups);
