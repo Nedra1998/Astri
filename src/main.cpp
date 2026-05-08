@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
   std::uniform_real_distribution<float> cdis(0.0f, 1.0f);
   std::uniform_real_distribution<float> sdist(-0.01f, 0.01f);
 
-  astri::SimulationState state = astri::SimulationState::instance();
+  astri::SimulationState &state = astri::SimulationState::instance();
   state.setup(object);
 
   glClearColor(0.0, 0.0, 0.0, 1.0);

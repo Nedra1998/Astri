@@ -1,6 +1,9 @@
 #ifndef INCLUDE_GL_CAMERA_HPP_
 #define INCLUDE_GL_CAMERA_HPP_
 
+#include <algorithm>
+
+#include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -19,14 +22,19 @@ namespace astri::gl {
     }
 
     inline void orbit(float yaw, float pitch, float distance = 0.0f) {
+      // Scale the yaw and pitch such that the camera moves slower when closer
+      // to the look_at point and faster when farther away (to a maximum of 1.0f)
+      float scale =
+          std::clamp((glm::distance(position, look_at) / 30000.0f) - 0.2f, 0.000001f, 1.0f);
+
       // Rotate the camera position and up direction around the look_at point
-      glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), yaw, up);
+      glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), yaw * scale, up);
       position = glm::vec3(rotation * glm::vec4(position - look_at, 1.0f)) + look_at;
       up = glm::vec3(rotation * glm::vec4(up, 1.0f));
 
       // Rotate the camera around the right axis
       glm::vec3 right = glm::cross(position - look_at, up);
-      rotation = glm::rotate(glm::mat4(1.0f), pitch, right);
+      rotation = glm::rotate(glm::mat4(1.0f), pitch * scale, right);
       position = glm::vec3(rotation * glm::vec4(position - look_at, 1.0f)) + look_at;
       up = glm::vec3(rotation * glm::vec4(up, 1.0f));
 

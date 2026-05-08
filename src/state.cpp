@@ -12,8 +12,14 @@
 #include "ui/colors.hpp"
 
 std::string_view identify_group(std::string_view name) {
+  // First look for parenthesis and take the prefix/first word from the
+  // parenthesis
+
+  // If no parenthesis or not a valid group name, look for the prefix/first
+  // word of the name (up to the first space or '-' or '_')
+
   // Get the first word of the name (up to the first space or '-')
-  const std::size_t space_pos = name.find_first_of(" -");
+  const std::size_t space_pos = name.find_first_of(" _-");
   if (space_pos == std::string_view::npos) {
     return "";
   }
@@ -72,12 +78,13 @@ void astri::SimulationState::update(float delta, gl::Object &object) {
     now += std::chrono::milliseconds(speed_multiplier * static_cast<long>(delta * 1000.0f));
   }
 
-  std::size_t idx = 0;
   astri::ecs::WORLD.query<sgp4::ElementSet, SatelliteState>().each(
       [&](sgp4::ElementSet &gp, SatelliteState &ss) {
         // If not visible, scale down to 0 to hide the satellite and skip the SGP4 calculation
         if (!ss.visible) {
+          LOG_DEBUG("Satellite {} is not visible, skipping SGP4 calculation", gp.object_name);
           object.instance(ss.idx, glm::mat4(0.0f));
+          return;
         }
 
         // Calculate the new position of the satellite based on the current time
@@ -87,7 +94,7 @@ void astri::SimulationState::update(float delta, gl::Object &object) {
         sgp4::sgp4(gp, tsince / 60.0, r, v);
 
         // Update the transformation matrix for the satellite instance.
-        object.instance(idx++,
+        object.instance(ss.idx,
                         glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(r[0], r[1], r[2])),
                                    glm::vec3(scale)),
                         ss.color);

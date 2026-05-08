@@ -20,7 +20,7 @@ namespace astri {
 
     bool paused = false;
     int speed_multiplier = 1;
-    float scale = 1.0f;
+    float scale = 25.0f;
 
     static inline SimulationState &instance() {
       static SimulationState state;
