@@ -141,10 +141,20 @@ int main(int argc, char *argv[]) {
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    shader->set("projection", camera.projection(width, height, 0.1f, EARTH * 100.0f));
+    // Dynamically set near/far planes based on camera distance to reduce z-fighting.
+    // near is clamped to at least 1 km to avoid numerical issues when very close.
+    shader->set("projection",
+                camera.projection(width, height, 10.0f,
+                                  glm::distance(camera.position, camera.look_at) * 2));
     shader->set("view", camera.view());
 
+    // Push the Earth surface slightly further in depth to avoid z-fighting
+    // with satellites. Factor=1, units=1 is a small but reliable offset.
+    // glEnable(GL_POLYGON_OFFSET_LINE);
+    // glPolygonOffset(-1.0f, 1.0f);
     earth.draw();
+    // glDisable(GL_POLYGON_OFFSET_LINE);
+
     object.draw();
 
     astri::ui::frame(window);
